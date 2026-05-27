@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS household_enriched (
     synced_date                     DATE,
     role                            VARCHAR(128),
     boundary_hierarchy              JSONB,
+    boundary_hierarchy_code         JSONB,
     synced_time_stamp               TIMESTAMPTZ,
     synced_time                     BIGINT,
     additional_details              JSONB
