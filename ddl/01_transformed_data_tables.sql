@@ -12,33 +12,33 @@ CREATE TABLE IF NOT EXISTS household_enriched (
     address_latitude                DOUBLE PRECISION,
     address_longitude               DOUBLE PRECISION,
     address_location_accuracy       DOUBLE PRECISION,
-    address_type                    TEXT,
+    address_type                    VARCHAR(64),
     address_locality                JSONB,
 
     -- Household.additionalFields
     household_additional_fields     JSONB,
 
     -- Household.auditDetails
-    created_by                      TEXT,
-    last_modified_by                TEXT,
+    created_by                      VARCHAR(64),
+    last_modified_by                VARCHAR(64),
     created_time                    BIGINT,
     last_modified_time              BIGINT,
 
     -- Household.clientAuditDetails
-    client_created_by               TEXT,
-    client_last_modified_by         TEXT,
+    client_created_by               VARCHAR(64),
+    client_last_modified_by         VARCHAR(64),
     client_created_time             BIGINT,
     client_last_modified_time       BIGINT,
 
     -- HouseholdIndexV1 top-level fields
-    user_name                       TEXT,
-    name_of_user                    TEXT,
-    user_address                    TEXT,
+    user_name                       VARCHAR(180),
+    name_of_user                    VARCHAR(250),
+    user_address                    VARCHAR(440),
     task_dates                      DATE,
-    synced_date                     TEXT,
-    role                            TEXT,
+    synced_date                     DATE,
+    role                            VARCHAR(128),
     boundary_hierarchy              JSONB,
     synced_time_stamp               TIMESTAMPTZ,
-    synced_time                     DATE,
+    synced_time                     BIGINT,
     additional_details              JSONB
 );
