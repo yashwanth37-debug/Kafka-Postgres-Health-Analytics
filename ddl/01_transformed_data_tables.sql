@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS household_enriched (
     -- Household core fields
-    id                              VARCHAR(64),
+    id                              VARCHAR(64)         PRIMARY KEY,
     tenant_id                       VARCHAR(1000)       NOT NULL,
     client_reference_id             VARCHAR(64),
     member_count                    INTEGER             NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS household_enriched (
 
 CREATE TABLE IF NOT EXISTS household_member_enriched (
     -- HouseholdMember core fields
-    id                                      VARCHAR(64),
+    id                                      VARCHAR(64)     PRIMARY KEY,
     tenant_id                               VARCHAR(1000)   NOT NULL,
     client_reference_id                     VARCHAR(64)     NOT NULL,
     household_id                            VARCHAR(64),
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS household_member_enriched (
 
 CREATE TABLE IF NOT EXISTS project_beneficiary_enriched (
     -- ProjectBeneficiary core fields
-    id                                      VARCHAR(64),
+    id                                      VARCHAR(64)     PRIMARY KEY,
     tenant_id                               VARCHAR(64)     NOT NULL,
     project_id                              VARCHAR(64)     NOT NULL,
     beneficiary_id                          VARCHAR(64),
@@ -132,4 +132,69 @@ CREATE TABLE IF NOT EXISTS project_beneficiary_enriched (
     synced_date                             DATE,
     synced_time_stamp                       TIMESTAMPTZ,
     additional_details                      JSONB
+);
+
+CREATE TABLE IF NOT EXISTS attendance_log_enriched (
+    -- AttendanceLog core fields
+    id                                      VARCHAR(256)     PRIMARY KEY,
+    tenant_id                               VARCHAR(64),
+    register_id                             VARCHAR(256),
+    individual_id                           VARCHAR(256),
+    log_user_name                           VARCHAR(180),
+    time                                    BIGINT,
+    type                                    VARCHAR(64),
+    status                                  VARCHAR(64),
+    log_additional_details                  JSONB,
+
+    -- AttendanceLog.auditDetails
+    created_by                              VARCHAR(64),
+    last_modified_by                        VARCHAR(64),
+    created_time                            BIGINT,
+    last_modified_time                      BIGINT,
+
+    -- AttendanceLogIndexV1 top-level fields
+    given_name                              VARCHAR(250),
+    family_name                             VARCHAR(250),
+    attendee_given_name                     VARCHAR(200),
+    attendee_family_name                    VARCHAR(200),
+    attendee_other_names                    VARCHAR(200),
+    user_name                               VARCHAR(180),
+    name_of_user                            VARCHAR(250),
+    role                                    VARCHAR(128),
+    user_address                            VARCHAR(440),
+    attendance_time                         TIMESTAMPTZ,
+    register_service_code                   VARCHAR(128),
+    register_name                           VARCHAR(256),
+    register_number                         VARCHAR(256),
+    boundary_hierarchy                      JSONB,
+    boundary_hierarchy_code                 JSONB,
+    additional_details                      JSONB
+);
+
+CREATE TABLE IF NOT EXISTS attendance_register_enriched (
+    -- AttendanceRegister core fields
+    id                                      VARCHAR(256)    PRIMARY KEY,
+    tenant_id                               VARCHAR(64),
+    register_number                         VARCHAR(256),
+    name                                    VARCHAR(250),
+    reference_id                            VARCHAR(64),
+    service_code                            VARCHAR(128),
+    start_date                              BIGINT,
+    end_date                                BIGINT,
+    status                                  VARCHAR(64),
+    staff                                   JSONB, --should this be kept in a separate table?
+    attendees                               JSONB, --should this be kept in a separate table?
+
+    -- AttendanceRegister.additionalDetails
+    register_additional_details             JSONB,
+
+    -- AttendanceRegister.auditDetails
+    created_by                              VARCHAR(64),
+    last_modified_by                        VARCHAR(64),
+    created_time                            BIGINT,
+    last_modified_time                      BIGINT,
+
+    -- AttendanceRegisterIndexV1 top-level fields
+    attendees_info                          JSONB,
+    transformer_time_stamp                  TIMESTAMPTZ
 );
