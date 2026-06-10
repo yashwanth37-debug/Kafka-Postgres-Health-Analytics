@@ -182,8 +182,8 @@ CREATE TABLE IF NOT EXISTS attendance_register_enriched (
     start_date                              BIGINT,
     end_date                                BIGINT,
     status                                  VARCHAR(64),
-    staff                                   JSONB, --should this be kept in a separate table?
-    attendees                               JSONB, --should this be kept in a separate table?
+    staff                                   JSONB, --TODO: should this be kept in a separate table?
+    attendees                               JSONB, --TODO: should this be kept in a separate table?
 
     -- AttendanceRegister.additionalDetails
     register_additional_details             JSONB,
@@ -197,4 +197,57 @@ CREATE TABLE IF NOT EXISTS attendance_register_enriched (
     -- AttendanceRegisterIndexV1 top-level fields
     attendees_info                          JSONB,
     transformer_time_stamp                  TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS pgr_complaints_enriched (
+    -- Service core fields
+    id                                      VARCHAR(64)     PRIMARY KEY,
+    tenant_id                               VARCHAR(64)     NOT NULL,
+    service_code                            VARCHAR(128)    NOT NULL,
+    service_request_id                      VARCHAR(128),
+    description                             TEXT,
+    account_id                              VARCHAR(64),
+    rating                                  INTEGER,
+    application_status                      VARCHAR(128),
+    source                                  VARCHAR(64)     NOT NULL,
+    active                                  BOOLEAN,
+    self_complaint                          BOOLEAN,
+    service_additional_detail               JSONB,
+
+    -- Service.user (complainant, flattened)
+    complainant_id                          BIGINT,
+    complainant_user_name                   VARCHAR(180),
+    complainant_name                        VARCHAR(250),
+    complainant_type                        VARCHAR(64),
+    complainant_mobile_number               VARCHAR(20),
+    complainant_email_id                    VARCHAR(250),
+    complainant_tenant_id                   VARCHAR(64),
+    complainant_uuid                        VARCHAR(64),
+    complainant_active                      BOOLEAN,
+    complainant_roles                       JSONB,
+
+    -- Service.address (flattened)
+    address_id                              VARCHAR(64),
+    address_locality                        JSONB,
+    address_addition_details                JSONB,
+    address_geo_lat                         DOUBLE PRECISION,
+    address_geo_lon                         DOUBLE PRECISION,
+    address_geo_additional_details          JSONB,
+
+    -- Service.auditDetails
+    created_by                              VARCHAR(64),
+    last_modified_by                        VARCHAR(64),
+    created_time                            BIGINT,
+    last_modified_time                      BIGINT,
+
+    -- PGRIndex top-level fields
+    user_name                               VARCHAR(180),
+    name_of_user                            VARCHAR(250),
+    role                                    VARCHAR(128),
+    user_address                            VARCHAR(440),
+    boundary_hierarchy                      JSONB,
+    boundary_hierarchy_code                 JSONB,
+    task_dates                              DATE,
+    locality_code                           VARCHAR(128),
+    additional_details                      JSONB
 );
