@@ -261,20 +261,26 @@ GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_c
 -- PHASE 2: PRODUCTION-READY KPI QUERIES (DASHBOARD LAYER)
 -- ============================================================================
 
+-- ============================================================================
 -- KPI 1: REFUSAL / ABSENCE REASONS BREAKDOWN
+-- ============================================================================
+-- Added `reason_type` so dashboards can separate absence reasons from refusal reasons
 SELECT
     campaign_id,
     country_code,
+    reason_type,
     reason_code,
     SUM(refusal_count) AS total_refusals,
     SUM(absence_count) AS total_absences
 FROM dm_refusals_daily_country
 WHERE reason_type IN ('REFUSAL', 'ABSENCE')
-GROUP BY campaign_id, country_code, reason_code
-ORDER BY total_refusals DESC;
+GROUP BY campaign_id, country_code, reason_type, reason_code
+ORDER BY total_refusals DESC, total_absences DESC;
 
 
--- KPI 2: TOTAL CAMPAIGN REFUSAL & ABSENCE RATES (%)
+-- ============================================================================
+-- KPI 2: TOTAL CAMPAIGN REFUSAL & ABSENCE RATES (COUNTRY)
+-- ============================================================================
 WITH DailyTotals AS (
     SELECT
         campaign_id,
@@ -298,9 +304,40 @@ FROM DailyTotals
 GROUP BY campaign_id, country_code;
 
 
--- KPI 3: REFUSAL & ABSENCE RATES BY DISTRICT (%)
+-- ============================================================================
+-- KPI 3: REFUSAL & ABSENCE RATES (PROVINCE)
+-- ============================================================================
+WITH ProvinceDailyTotals AS (
+    SELECT
+        campaign_id,
+        country_code,
+        province_code,
+        task_date,
+        SUM(refusal_count) AS daily_refusals,
+        SUM(absence_count) AS daily_absences,
+        MAX(total_task_submissions) AS daily_tasks
+    FROM dm_refusals_daily_province
+    GROUP BY campaign_id, country_code, province_code, task_date
+)
+SELECT
+    campaign_id,
+    country_code,
+    province_code,
+    SUM(daily_refusals) AS province_refusals,
+    SUM(daily_absences) AS province_absences,
+    SUM(daily_tasks) AS province_task_total,
+    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS province_refusal_rate,
+    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS province_absence_rate
+FROM ProvinceDailyTotals
+GROUP BY campaign_id, country_code, province_code;
+
+
+-- ============================================================================
+-- KPI 4: REFUSAL & ABSENCE RATES (DISTRICT)
+-- ============================================================================
 WITH DistrictDailyTotals AS (
     SELECT
+        campaign_id,
         country_code,
         province_code,
         district_code,
@@ -309,9 +346,10 @@ WITH DistrictDailyTotals AS (
         SUM(absence_count) AS daily_absences,
         MAX(total_task_submissions) AS daily_tasks
     FROM dm_refusals_daily_district
-    GROUP BY country_code, province_code, district_code, task_date
+    GROUP BY campaign_id, country_code, province_code, district_code, task_date
 )
 SELECT
+    campaign_id,
     country_code,
     province_code,
     district_code,
@@ -321,9 +359,110 @@ SELECT
     (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS district_refusal_rate,
     (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS district_absence_rate
 FROM DistrictDailyTotals
-GROUP BY country_code, province_code, district_code;
+GROUP BY campaign_id, country_code, province_code, district_code;
 
 
+-- ============================================================================
+-- KPI 5: REFUSAL & ABSENCE RATES (HEALTH CENTER)
+-- ============================================================================
+WITH HealthCenterDailyTotals AS (
+    SELECT
+        campaign_id,
+        country_code,
+        province_code,
+        district_code,
+        healthcenter_code,
+        task_date,
+        SUM(refusal_count) AS daily_refusals,
+        SUM(absence_count) AS daily_absences,
+        MAX(total_task_submissions) AS daily_tasks
+    FROM dm_refusals_daily_healthcenter
+    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, task_date
+)
+SELECT
+    campaign_id,
+    country_code,
+    province_code,
+    district_code,
+    healthcenter_code,
+    SUM(daily_refusals) AS hc_refusals,
+    SUM(daily_absences) AS hc_absences,
+    SUM(daily_tasks) AS hc_task_total,
+    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_refusal_rate,
+    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_absence_rate
+FROM HealthCenterDailyTotals
+GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code;
+
+
+-- ============================================================================
+-- KPI 6: REFUSAL & ABSENCE RATES (SPP)
+-- ============================================================================
+
+WITH SppDailyTotals AS (
+    SELECT
+        campaign_id,
+        country_code,
+        province_code,
+        district_code,
+        healthcenter_code,
+        spp_code,
+        task_date,
+        SUM(refusal_count) AS daily_refusals,
+        SUM(absence_count) AS daily_absences,
+        MAX(total_task_submissions) AS daily_tasks
+    FROM dm_refusals_daily_spp
+    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, task_date
+)
+SELECT
+    campaign_id,
+    country_code,
+    province_code,
+    district_code,
+    healthcenter_code,
+    spp_code,
+    SUM(daily_refusals) AS spp_refusals,
+    SUM(daily_absences) AS spp_absences,
+    SUM(daily_tasks) AS spp_task_total,
+    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_refusal_rate,
+    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_absence_rate
+FROM SppDailyTotals
+GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code;
+
+
+-- ============================================================================
+-- KPI 7: REFUSAL & ABSENCE RATES (VILLAGE)
+-- ============================================================================
+WITH VillageDailyTotals AS (
+    SELECT
+        campaign_id,
+        country_code,
+        province_code,
+        district_code,
+        healthcenter_code,
+        spp_code,
+        village_code,
+        task_date,
+        SUM(refusal_count) AS daily_refusals,
+        SUM(absence_count) AS daily_absences,
+        MAX(total_task_submissions) AS daily_tasks
+    FROM dm_refusals_daily_village
+    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code, task_date
+)
+SELECT
+    campaign_id,
+    country_code,
+    province_code,
+    district_code,
+    healthcenter_code,
+    spp_code,
+    village_code,
+    SUM(daily_refusals) AS village_refusals,
+    SUM(daily_absences) AS village_absences,
+    SUM(daily_tasks) AS village_task_total,
+    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_refusal_rate,
+    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_absence_rate
+FROM VillageDailyTotals
+GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code;
 
 --==========================================================================
 
@@ -343,45 +482,44 @@ SELECT
     transaction_date,
 
     -- ==========================================
-    -- KPI 1: Vials Issued per Team/DayN
-
-    )
-END AS wastage_rate_pct,
+    -- KPI 1: Vials Issued per Team/Day
+    -- ==========================================
+    total_issued AS vials_issued,
 
     -- ==========================================
-    -- KPI 4: Stock Reconciliation Rate (%)
+    -- KPI 2: Doses Administered (Estimated)
+    -- ==========================================
+    -- NOTE: Replace '10' with your actual doses-per-vial multiplier if applicable.
+    (total_issued - total_returned) * 10 AS estimated_doses_administered,
+
+    -- ==========================================
+    -- KPI 3: Wastage Rate (%)
     -- ==========================================
     CASE
-        -- If the calculated balance is 0, we can't calculate a standard ratio
-        WHEN calculated_balance = 0 THEN NULL
+        -- Prevent division by zero if nothing was handled that day
+        WHEN (total_issued - total_returned + total_damaged) = 0 THEN 0.00
         ELSE ROUND(
-                (reconciled_physical_count::NUMERIC / calculated_balance) * 100,
+                (total_damaged::NUMERIC / (total_issued - total_returned + total_damaged)) * 100,
                 2
              )
-END AS stock_reconciliation_rate_pct,
+        END AS wastage_rate_pct,
 
     -- ==========================================
-    -- KPI 5: Stock-out Risk (%)
+    -- KPI 4: Stock-out Risk (%)
     -- ==========================================
     CASE
         -- Cannot calculate risk if there is no target set for the facility
         WHEN facility_target = 0 OR facility_target IS NULL THEN NULL
         ELSE ROUND(
-                (
-                    -- Prioritize physical count if available, otherwise fallback to calculated balance
-                    COALESCE(NULLIF(reconciled_physical_count, 0), calculated_balance)::NUMERIC
-                / facility_target
-                    ) * 100,
+                (calculated_balance::NUMERIC / facility_target) * 100,
                 2
              )
-END AS stock_out_risk_pct,
+        END AS stock_out_risk_pct,
 
     -- Carry forward audit timestamps for dashboard context
-    last_movement_timestamp,
-    last_reconciliation_timestamp
+    last_movement_timestamp
 
 FROM dm_stock_daily;
-
 
 --==========================================================================
 
