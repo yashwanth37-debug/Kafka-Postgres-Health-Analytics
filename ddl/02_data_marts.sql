@@ -393,15 +393,30 @@ failed_tasks AS (
         tenant_id,
         task_dates,
         boundary_hierarchy_code->>'country' AS country_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+
+        -- Dynamically determine Reason Type
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+
+        -- Coalesce the available reason into the reason_code column
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
     WHERE is_deleted = FALSE
-      AND administration_status = 'ADMINISTRATION_FAILED'
-    GROUP BY campaign_id, tenant_id, task_dates, boundary_hierarchy_code->>'country',
-             additional_details->>'reason_type', additional_details->>'reason_code'
+      AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY
+        campaign_id, tenant_id, task_dates, boundary_hierarchy_code->>'country',
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -439,17 +454,26 @@ failed_tasks AS (
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country' AS country_code,
         boundary_hierarchy_code->>'province' AS province_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
-    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_FAILED'
+    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
     GROUP BY
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country',
         boundary_hierarchy_code->>'province',
-        additional_details->>'reason_type', additional_details->>'reason_code'
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -490,18 +514,27 @@ failed_tasks AS (
         boundary_hierarchy_code->>'country' AS country_code,
         boundary_hierarchy_code->>'province' AS province_code,
         boundary_hierarchy_code->>'district' AS district_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
-    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_FAILED'
+    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
     GROUP BY
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country',
         boundary_hierarchy_code->>'province',
         boundary_hierarchy_code->>'district',
-        additional_details->>'reason_type', additional_details->>'reason_code'
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -545,19 +578,28 @@ failed_tasks AS (
         boundary_hierarchy_code->>'province' AS province_code,
         boundary_hierarchy_code->>'district' AS district_code,
         boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
-    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_FAILED'
+    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
     GROUP BY
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country',
         boundary_hierarchy_code->>'province',
         boundary_hierarchy_code->>'district',
         boundary_hierarchy_code->>'healthCenter',
-        additional_details->>'reason_type', additional_details->>'reason_code'
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -604,12 +646,16 @@ failed_tasks AS (
         boundary_hierarchy_code->>'district' AS district_code,
         boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
         boundary_hierarchy_code->>'spp' AS spp_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
-    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_FAILED'
+    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
     GROUP BY
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country',
@@ -617,7 +663,12 @@ failed_tasks AS (
         boundary_hierarchy_code->>'district',
         boundary_hierarchy_code->>'healthCenter',
         boundary_hierarchy_code->>'spp',
-        additional_details->>'reason_type', additional_details->>'reason_code'
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -667,12 +718,16 @@ failed_tasks AS (
         boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
         boundary_hierarchy_code->>'spp' AS spp_code,
         boundary_hierarchy_code->>'village' AS village_code,
-        additional_details->>'reason_type' AS reason_type,
-        additional_details->>'reason_code' AS reason_code,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'REFUSAL' THEN 1 END) AS refusal_count,
-        COUNT(CASE WHEN additional_details->>'reason_type' = 'ABSENCE' THEN 1 END) AS absence_count
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
     FROM project_task_enriched
-    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_FAILED'
+    WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
     GROUP BY
         campaign_id, tenant_id, task_dates,
         boundary_hierarchy_code->>'country',
@@ -681,7 +736,12 @@ failed_tasks AS (
         boundary_hierarchy_code->>'healthCenter',
         boundary_hierarchy_code->>'spp',
         boundary_hierarchy_code->>'village',
-        additional_details->>'reason_type', additional_details->>'reason_code'
+        CASE
+            WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL'
+            WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE'
+            ELSE 'UNSPECIFIED'
+        END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
 SELECT
     f.campaign_id, f.tenant_id, f.task_dates AS task_date,
@@ -707,9 +767,9 @@ CREATE UNIQUE INDEX idx_dm_refusals_village
 CREATE TABLE IF NOT EXISTS dm_stock_daily AS
 
     -- ==========================================
--- 1. Isolate the final stock check of the day
+-- 1. Pivot the Everyday Stock Movements
 -- ==========================================
-    WITH latest_daily_reconciliation AS (
+    WITH daily_stock_events AS (
         SELECT
         campaign_id,
         facility_id,
@@ -717,55 +777,22 @@ CREATE TABLE IF NOT EXISTS dm_stock_daily AS
         facility_level,
         facility_target,
         product_name,
-        TO_TIMESTAMP(date_of_reconciliation / 1000)::DATE AS transaction_date,
-    physical_count,
-    date_of_reconciliation, -- Keep the raw timestamp for the audit trail
-    ROW_NUMBER() OVER (
-                          PARTITION BY campaign_id, facility_id, product_name, TO_TIMESTAMP(date_of_reconciliation / 1000)::DATE
-    ORDER BY date_of_reconciliation DESC
-    ) as daily_rank
-    FROM stock_reconciliation_enriched
-    WHERE is_deleted = false
-    ),
+        TO_TIMESTAMP(date_of_entry / 1000)::DATE AS transaction_date,
 
-    -- ==========================================
--- 2. The UNION ALL (Now carrying timestamp data)
--- ==========================================
-    unified_stock_events AS (
-    -- Top Half: Everyday Stock Movements
-                                SELECT
-                                campaign_id, facility_id, facility_name, facility_level, facility_target, product_name,
-                                TO_TIMESTAMP(date_of_entry / 1000)::DATE AS transaction_date,
+    -- Pivot events into distinct columns
     CASE WHEN event_type = 'RECEIVED' THEN physical_count ELSE 0 END AS received_qty,
     CASE WHEN event_type = 'ISSUED' THEN physical_count ELSE 0 END AS issued_qty,
     CASE WHEN event_type = 'RETURNED' THEN physical_count ELSE 0 END AS returned_qty,
     CASE WHEN event_type = 'DAMAGED' THEN physical_count ELSE 0 END AS damaged_qty,
-    0 AS reconciliation_physical_count,
 
-    -- NEW: Pass the movement timestamp, put 0 for reconciliation
-    date_of_entry AS last_movement_time_ms,
-    0::BIGINT AS last_reconciliation_time_ms
+    -- Carry the raw timestamp forward for the audit trail
+    date_of_entry AS last_movement_time_ms
     FROM stock_enriched
     WHERE event_type IN ('RECEIVED', 'ISSUED', 'RETURNED', 'DAMAGED')
-
-    UNION ALL
-
-    -- Bottom Half: Manual Stock Checks
-    SELECT
-    campaign_id, facility_id, facility_name, facility_level, facility_target, product_name,
-    transaction_date,
-    0 AS received_qty, 0 AS issued_qty, 0 AS returned_qty, 0 AS damaged_qty,
-    physical_count AS reconciliation_physical_count,
-
-    -- NEW: Put 0 for movement, pass the reconciliation timestamp
-    0::BIGINT AS last_movement_time_ms,
-    date_of_reconciliation AS last_reconciliation_time_ms
-    FROM latest_daily_reconciliation
-    WHERE daily_rank = 1
     )
 
 -- ==========================================
--- 3. Final Aggregation
+-- 2. Final Daily Aggregation
 -- ==========================================
 SELECT
     campaign_id,
@@ -775,21 +802,28 @@ SELECT
     facility_target,
     product_name,
     transaction_date,
+
+    -- Roll up the daily volumes
     SUM(received_qty) AS total_received,
     SUM(issued_qty) AS total_issued,
     SUM(returned_qty) AS total_returned,
     SUM(damaged_qty) AS total_damaged,
+
+    -- Calculate the expected balance on the shelf
     (SUM(received_qty) - SUM(issued_qty) + SUM(returned_qty) - SUM(damaged_qty)) AS calculated_balance,
-    SUM(reconciliation_physical_count) AS reconciled_physical_count,
 
-    -- NEW: Extract the latest timestamps and convert them to readable formats
-    TO_TIMESTAMP(NULLIF(MAX(last_movement_time_ms), 0) / 1000) AS last_movement_timestamp,
-    TO_TIMESTAMP(NULLIF(MAX(last_reconciliation_time_ms), 0) / 1000) AS last_reconciliation_timestamp
+    -- Extract the absolute latest movement time for the day
+    TO_TIMESTAMP(MAX(last_movement_time_ms) / 1000) AS last_movement_timestamp
 
-FROM unified_stock_events
+FROM daily_stock_events
 GROUP BY
-    campaign_id, facility_id, facility_name, facility_level, facility_target, product_name, transaction_date;
-
+    campaign_id,
+    facility_id,
+    facility_name,
+    facility_level,
+    facility_target,
+    product_name,
+    transaction_date;
     
 --==========================================================================
 
