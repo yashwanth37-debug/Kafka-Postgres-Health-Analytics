@@ -887,4 +887,3 @@ GROUP BY
 CREATE INDEX IF NOT EXISTS idx_team_perf_daily
     ON dm_team_performance_daily (campaign_id, user_name, task_date, locality_code);
 
-
