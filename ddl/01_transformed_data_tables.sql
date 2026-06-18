@@ -37,13 +37,20 @@ CREATE TABLE IF NOT EXISTS household_enriched (
     task_dates                      DATE,
     synced_date                     DATE,
     role                            VARCHAR(128),
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     geo_point_lat                   DOUBLE PRECISION,
     geo_point_lon                   DOUBLE PRECISION,
     synced_time_stamp               TIMESTAMPTZ,
     synced_time                     BIGINT,
-    additional_details              JSONB
+    additional_details              JSONB,
 
     -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
@@ -54,8 +61,7 @@ CREATE TABLE IF NOT EXISTS household_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
-
+    );
 CREATE TABLE IF NOT EXISTS household_member_enriched (
     -- HouseholdMember core fields
     id                                      VARCHAR(64)     PRIMARY KEY,
@@ -85,8 +91,15 @@ CREATE TABLE IF NOT EXISTS household_member_enriched (
     client_last_modified_time               BIGINT,
 
     -- HouseholdMemberIndexV1 top-level fields
-    boundary_hierarchy                      JSONB,
-    boundary_hierarchy_code                 JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     date_of_birth                           BIGINT,
     age                                     INTEGER,
     gender                                  VARCHAR(64),
@@ -142,8 +155,15 @@ CREATE TABLE IF NOT EXISTS project_beneficiary_enriched (
     client_last_modified_time               BIGINT,
 
     -- ProjectBeneficiaryIndexV1 top-level fields
-    boundary_hierarchy                      JSONB,
-    boundary_hierarchy_code                 JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     user_name                               VARCHAR(180),
     name_of_user                            VARCHAR(250),
     role                                    VARCHAR(128),
@@ -197,9 +217,19 @@ CREATE TABLE IF NOT EXISTS attendance_log_enriched (
     register_service_code                   VARCHAR(128),
     register_name                           VARCHAR(256),
     register_number                         VARCHAR(256),
-    boundary_hierarchy                      JSONB,
-    boundary_hierarchy_code                 JSONB,
+
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     additional_details                      JSONB
+
     -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
     -- ==========================================
@@ -209,7 +239,7 @@ CREATE TABLE IF NOT EXISTS attendance_log_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS attendance_register_enriched (
     -- AttendanceRegister core fields
@@ -246,6 +276,8 @@ CREATE TABLE IF NOT EXISTS attendance_register_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
+
+
 );
 
 CREATE TABLE IF NOT EXISTS pgr_complaints_enriched (
@@ -294,8 +326,16 @@ CREATE TABLE IF NOT EXISTS pgr_complaints_enriched (
     name_of_user                            VARCHAR(250),
     role                                    VARCHAR(128),
     user_address                            VARCHAR(440),
-    boundary_hierarchy                      JSONB,
-    boundary_hierarchy_code                 JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     task_dates                              DATE,
     locality_code                           VARCHAR(128),
     additional_details                      JSONB
@@ -340,21 +380,29 @@ CREATE TABLE IF NOT EXISTS project_staff_enriched (
     user_address                    VARCHAR(440),
     role                            VARCHAR(128),
     task_dates                      JSONB,          -- Stored as JSONB to accommodate List<String>
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     additional_details              JSONB,
     locality_code                   VARCHAR(256),
 
     -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
     -- ==========================================
-    project_id                      VARCHAR(64),    
+    project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
     project_type_id                 VARCHAR(64),
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS project_staff_enriched (
     -- ==========================================
@@ -387,20 +435,28 @@ CREATE TABLE IF NOT EXISTS project_staff_enriched (
     user_address                    VARCHAR(440),
     role                            VARCHAR(128),
     task_dates                      JSONB,          -- Stored as JSONB to accommodate List<String>
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+-- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     additional_details              JSONB,
     locality_code                   VARCHAR(256),
     -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
     -- ==========================================
-    project_id                      VARCHAR(64),    
+    project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
     project_type_id                 VARCHAR(64),
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 
 
@@ -445,8 +501,15 @@ CREATE TABLE IF NOT EXISTS referral_enriched (
     role                                        VARCHAR(128),
     user_address                                VARCHAR(440),
     age                                         INTEGER,
-    boundary_hierarchy                          JSONB,
-    boundary_hierarchy_code                     JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     facility_name                               VARCHAR(256),
     individual_id                               VARCHAR(64),
     gender                                      VARCHAR(64),
@@ -463,7 +526,7 @@ CREATE TABLE IF NOT EXISTS referral_enriched (
     project_name                                VARCHAR(256),
     campaign_number                             VARCHAR(128),
     campaign_id                                 VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
@@ -490,8 +553,16 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
     user_name                       VARCHAR(180),
     role                            VARCHAR(128),             -- Distinct from userRoles above
-    boundary_hierarchy              JSONB,                    -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,                    -- Mapped from Map<String, String>
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     task_dates                      VARCHAR(128),             -- Stored as String per Java model
     synced_date                     VARCHAR(128),             -- Stored as String per Java model
 
@@ -510,7 +581,7 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
     -- Fields from DeviceToken.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                     id                              VARCHAR(64)     PRIMARY KEY,
     user_id                         VARCHAR(64)     NOT NULL,
     device_token                    VARCHAR(512)    NOT NULL, -- Expanded length, Firebase/FCM tokens are long
     device_type                     VARCHAR(64)     NOT NULL,
@@ -530,8 +601,16 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
     user_name                       VARCHAR(180),
     role                            VARCHAR(128),             -- Distinct from userRoles above
-    boundary_hierarchy              JSONB,                    -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,                    -- Mapped from Map<String, String>
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     task_dates                      VARCHAR(128),             -- Stored as String per Java model
     synced_date                     VARCHAR(128),             -- Stored as String per Java model
 
@@ -544,14 +623,14 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 
 CREATE TABLE IF NOT EXISTS hf_referral_enriched (
     -- ==========================================
     -- UPSTREAM FIELDS (From HFReferral.java)
     -- ==========================================
-    id                                  VARCHAR(64)     PRIMARY KEY,
+                                                    id                                  VARCHAR(64)     PRIMARY KEY,
     client_reference_id                 VARCHAR(64),
     tenant_id                           VARCHAR(1000)   NOT NULL,
     project_id                          VARCHAR(64),
@@ -584,8 +663,15 @@ CREATE TABLE IF NOT EXISTS hf_referral_enriched (
     user_name                           VARCHAR(180),
     role                                VARCHAR(128),
     user_address                        VARCHAR(440),
-    boundary_hierarchy                  JSONB,          -- Mapped from Map<String, String>
-    boundary_hierarchy_code             JSONB,          -- Mapped from Map<String, String>
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     task_dates                          VARCHAR(128),   -- Stored as String per Java model
     synced_date                         VARCHAR(128),   -- Stored as String per Java model
     additional_details                  JSONB,          -- Mapped from ObjectNode
@@ -598,13 +684,13 @@ CREATE TABLE IF NOT EXISTS hf_referral_enriched (
     project_name                        VARCHAR(256),
     campaign_number                     VARCHAR(128),
     campaign_id                         VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS bill_enriched (
     -- ==========================================
     -- Fields from Bill.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                             id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(64)     NOT NULL,
     locality_code                   VARCHAR(256),
     bill_date                       BIGINT          NOT NULL,
@@ -645,8 +731,15 @@ CREATE TABLE IF NOT EXISTS bill_enriched (
     user_name                       VARCHAR(180),
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
 
     -- ==========================================
 -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
@@ -657,7 +750,7 @@ CREATE TABLE IF NOT EXISTS bill_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 
 CREATE TABLE IF NOT EXISTS attendee_enriched (
@@ -688,8 +781,14 @@ CREATE TABLE IF NOT EXISTS attendee_enriched (
     register_service_code           VARCHAR(128),
     register_name                   VARCHAR(256),
     register_number                 VARCHAR(256),
-    boundary_hierarchy              JSONB,          -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Mapped from Map<String, String>
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
 
 -- ==========================================
 -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
@@ -735,8 +834,15 @@ CREATE TABLE IF NOT EXISTS side_effect_enriched (
     -- ==========================================
     date_of_birth                               BIGINT,
     age                                         INTEGER,
-    boundary_hierarchy                          JSONB,
-    boundary_hierarchy_code                     JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     locality_code                               VARCHAR(256),
     individual_id                               VARCHAR(64),
     gender                                      VARCHAR(64),
@@ -758,7 +864,7 @@ CREATE TABLE IF NOT EXISTS side_effect_enriched (
     project_name                                VARCHAR(256),
     campaign_number                             VARCHAR(128),
     campaign_id                                 VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS muster_roll_enriched (
     -- ==========================================
@@ -794,8 +900,15 @@ CREATE TABLE IF NOT EXISTS muster_roll_enriched (
     user_name                       VARCHAR(180),
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
 
     -- ==========================================
     -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
@@ -806,7 +919,7 @@ CREATE TABLE IF NOT EXISTS muster_roll_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS stock_enriched (
     -- ==========================================
@@ -827,8 +940,17 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     role                              VARCHAR(128),
     user_address                      VARCHAR(440),
     date_of_entry                     BIGINT,
-    boundary_hierarchy                JSONB,
-    boundary_hierarchy_code           JSONB,
+
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     created_by                        VARCHAR(256),
     last_modified_by                  VARCHAR(256),
     created_time                      BIGINT,
@@ -875,7 +997,6 @@ CREATE TABLE IF NOT EXISTS attendance_staff_enriched (
     last_modified_by                VARCHAR(64),
     created_time                    BIGINT,
     last_modified_time              BIGINT,
-
     additional_details              JSONB,          -- Mapped from Object
 
 -- ==========================================
@@ -889,11 +1010,18 @@ CREATE TABLE IF NOT EXISTS attendance_staff_enriched (
     register_name                   VARCHAR(256),
     register_number                 VARCHAR(256),
 
-    boundary_hierarchy              JSONB,          -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Mapped from Map<String, String>
 
--- ==========================================
-    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
+    -- ==========================================
+-- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
 -- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
@@ -904,7 +1032,7 @@ CREATE TABLE IF NOT EXISTS attendance_staff_enriched (
 );
 
 CREATE TABLE IF NOT EXISTS service_task_enriched (
-    id VARCHAR(255) PRIMARY KEY,
+                                                     id VARCHAR(255) PRIMARY KEY,
 
     created_time BIGINT,
     created_by VARCHAR(255),
@@ -918,8 +1046,16 @@ CREATE TABLE IF NOT EXISTS service_task_enriched (
     role VARCHAR(255),
     user_address TEXT,
 
-    boundary_hierarchy JSONB,
-    boundary_hierarchy_code JSONB,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
 
     tenant_id VARCHAR(255),
     user_id VARCHAR(255),
@@ -938,7 +1074,7 @@ CREATE TABLE IF NOT EXISTS service_task_enriched (
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION
 
--- ==========================================
+    -- ==========================================
     -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
 -- ==========================================
     project_id                      VARCHAR(64),
@@ -954,7 +1090,7 @@ CREATE TABLE IF NOT EXISTS bill_detail_enriched (
     -- ==========================================
     -- Fields from BillDetail.java
     -- ==========================================
-    id                              VARCHAR(128)    PRIMARY KEY, 
+    id                              VARCHAR(128)    PRIMARY KEY,
     tenant_id                       VARCHAR(64)     NOT NULL,
     bill_id                         VARCHAR(64),
     total_amount                    NUMERIC(12, 2)  DEFAULT 0,
@@ -992,17 +1128,23 @@ CREATE TABLE IF NOT EXISTS bill_detail_enriched (
     bill_wf_status_info             JSONB,          -- Mapped from Map<String, Object>
     wf_status_info                  JSONB,          -- Mapped from Map<String, Object>
 
-    -- User Enrichment
+-- User Enrichment
     user_name                       VARCHAR(180),
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
 
-    -- Boundary Enrichment
-    boundary_hierarchy              JSONB,          -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Mapped from Map<String, String>
 
--- ==========================================
-    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
+    -- ==========================================
+-- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
 -- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
@@ -1066,8 +1208,16 @@ CREATE TABLE IF NOT EXISTS stock_reconciliation_enriched (
     synced_date                     VARCHAR(128),
 
     -- Hierarchy & Location mappings
-    boundary_hierarchy              JSONB,
-    boundary_hierarchy_code         JSONB,
+
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     locality_code                   VARCHAR(256),
 
     -- Dynamic extensions
@@ -1133,19 +1283,26 @@ CREATE TABLE IF NOT EXISTS referral_service_task_enriched (
 
 
 
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     -- ==========================================
     -- COMPLEX JSONB MAPPINGS (Arrays & Objects)
     -- ==========================================
-    boundary_hierarchy              JSONB,          -- Extracted hierarchy Map
-    boundary_hierarchy_code         JSONB,          -- Extracted hierarchy code Map
     raw_attributes                  JSONB,          -- Upstream List<AttributeValue>
     additional_fields               JSONB,          -- Upstream JsonNode
     additional_details_upstream     JSONB,          -- Upstream JsonNode
     additional_details              JSONB,          -- Downstream ObjectNode (Contains cycle_index)
 
-    -- ==========================================
-    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
-    -- ==========================================
+-- ==========================================
+-- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+-- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
     project_type_id                 VARCHAR(64),
@@ -1187,17 +1344,26 @@ CREATE TABLE IF NOT EXISTS project_enriched (
     target_type                     VARCHAR(128),
     locality_code                   VARCHAR(128),
 
+
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+
     -- ==========================================
     -- COMPLEX JSONB MAPPINGS (Arrays & Objects)
     -- ==========================================
-    boundary_hierarchy              JSONB,          -- Downstream Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Downstream Map<String, String>
     task_dates                      JSONB,          -- Downstream List<String>
     additional_details              JSONB,          -- Downstream JsonNode
 
-    -- ==========================================
-    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
-    -- ==========================================
+-- ==========================================
+-- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+-- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
     project_type_id                 VARCHAR(64),
@@ -1211,7 +1377,7 @@ CREATE TABLE IF NOT EXISTS bill_report_enriched (
     -- ==========================================
     -- CORE UPSTREAM FIELDS: From BillReport.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                    id                              VARCHAR(64)     PRIMARY KEY,
     bill_id                         VARCHAR(64),
     bill_ids                        JSONB,          -- List<String> mapped to JSONB
     tenant_id                       VARCHAR(1000)   NOT NULL,
@@ -1236,12 +1402,16 @@ CREATE TABLE IF NOT EXISTS bill_report_enriched (
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
 
-    -- Geography Enrichment
-    boundary_hierarchy              JSONB,          -- Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Map<String, String>
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
 
 -- ==========================================
-    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+-- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
 -- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
@@ -1263,10 +1433,10 @@ CREATE TABLE IF NOT EXISTS user_action_enriched (
     id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(1000)   NOT NULL,
     client_reference_id             VARCHAR(64),
-    
+
     -- Using prefix to avoid collision with downstream explicit project_id
-    raw_project_id                  VARCHAR(64),    
-    
+    raw_project_id                  VARCHAR(64),
+
     latitude                        DOUBLE PRECISION,
     longitude                       DOUBLE PRECISION,
     location_accuracy               DOUBLE PRECISION,
@@ -1295,30 +1465,38 @@ CREATE TABLE IF NOT EXISTS user_action_enriched (
     project_id                      VARCHAR(64),    -- Explicitly declared in V1 Index
     project_type                    VARCHAR(64),    -- Explicitly declared in V1 Index
     project_type_id                 VARCHAR(64),    -- Explicitly declared in V1 Index
-    
+
     user_name                       VARCHAR(180),
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
-    
+
     -- Sync & Telemetry
     synced_time_stamp               VARCHAR(128),
     synced_time                     BIGINT,
     task_dates                      VARCHAR(128),
     synced_date                     VARCHAR(128),
-    --GeoPoint in expanded form 
+    --GeoPoint in expanded form
     geo_latitude                    DOUBLE PRECISION,
     geo_longitude                   DOUBLE PRECISION,
+
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
     -- Complex JSONB Arrays & Objects
-    boundary_hierarchy              JSONB,          -- Mapped from Map<String, String>
-    boundary_hierarchy_code         JSONB,          -- Mapped from Map<String, String>
     additional_details              JSONB,          -- Mapped from ObjectNode (parsed fields)
 
-    -- ==========================================
-    --Extra fields used by the transformer for transformation
-    -- ==========================================
+-- ==========================================
+--Extra fields used by the transformer for transformation
+-- ==========================================
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
+
 );
 
 
@@ -1327,7 +1505,7 @@ CREATE TABLE IF NOT EXISTS project_task_enriched (
     -- ==========================================
     -- PRIMARY KEY
     -- ==========================================
-    id                                      VARCHAR(128)    PRIMARY KEY,
+   id                                      VARCHAR(128)    PRIMARY KEY,
 
     -- ==========================================
     -- CORE TASK IDENTIFIERS & METADATA
@@ -1385,12 +1563,18 @@ CREATE TABLE IF NOT EXISTS project_task_enriched (
     location_accuracy                       DOUBLE PRECISION,
     locality_code                           VARCHAR(256),
     geo_point                               JSONB,          -- List<Double> Array [lon, lat]
-    boundary_hierarchy                      JSONB,          -- Map<String, String>
-    boundary_hierarchy_code                 JSONB,          -- Map<String, String>
 
-    -- ==========================================
-    -- SYNC TELEMETRY
-    -- ==========================================
+    -- Flattened Boundary Hierarchy Fields
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128),
+
+-- ==========================================
+-- SYNC TELEMETRY
+-- ==========================================
     synced_time_stamp                       VARCHAR(128),
     synced_date                             VARCHAR(128),
     synced_time                             BIGINT,
@@ -1410,4 +1594,5 @@ CREATE TABLE IF NOT EXISTS project_task_enriched (
     project_name                            VARCHAR(256),
     campaign_number                         VARCHAR(128),
     campaign_id                             VARCHAR(128)
+
 );
