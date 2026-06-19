@@ -1,645 +1,452 @@
---==========================================================================
+-- ============================================================================
+-- ============================================================================
+--                             DATA MART 1
+--                 COVERAGE MART (Unified and Flattened)
+-- ============================================================================
+-- ============================================================================
 
-
--- DATA MART 1
-
-
---==========================================================================
-
-
--- Total Children Vaccinated (Overall Campaign)
+-- 1. COUNTRY LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_country AS
 SELECT
-    campaign_id,
-    SUM(total_administered_successfully) AS total_children_vaccinated
-FROM dm_coverage_daily_country
-GROUP BY campaign_id;
+    campaign_id, tenant_id, task_dates AS task_date, country_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code;
 
--- Total Could Not Vaccinate (Overall Campaign)
+CREATE UNIQUE INDEX idx_dm_cov_daily_country ON dm_coverage_daily_country(campaign_id, tenant_id, task_date, country_code);
+
+-- 2. PROVINCE LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_province AS
 SELECT
-    campaign_id,
-    SUM(could_not_vaccinate_count) AS total_could_not_vaccinate
-FROM dm_coverage_daily_country
-GROUP BY campaign_id;
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code;
 
--- Daily Coverage Rate (By Date)
+CREATE UNIQUE INDEX idx_dm_cov_daily_province ON dm_coverage_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
+
+-- 3. DISTRICT LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_district AS
 SELECT
-    task_date,
-    SUM(total_administered_successfully) AS daily_children_vaccinated,
-    SUM(total_task_submissions) AS daily_total_submissions,
-    ROUND((SUM(total_administered_successfully)::NUMERIC / NULLIF(SUM(total_task_submissions), 0)) * 100, 2) AS daily_coverage_rate_percentage
-FROM dm_coverage_daily_country
-GROUP BY task_date
-ORDER BY task_date DESC;
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code;
 
--- District Performance Summary
+CREATE UNIQUE INDEX idx_dm_cov_daily_district ON dm_coverage_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
+
+-- 4. HEALTH CENTER LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_healthcenter AS
 SELECT
-    country_code,
-    province_code,
-    district_code,
-    SUM(total_administered_successfully) AS district_children_vaccinated,
-    SUM(could_not_vaccinate_count) AS district_failed_vaccinations,
-    SUM(total_task_submissions) AS district_total_tasks,
-    ROUND((SUM(total_administered_successfully)::NUMERIC / NULLIF(SUM(total_task_submissions), 0)) * 100, 2) AS district_success_rate
-FROM dm_coverage_daily_district
-GROUP BY country_code, province_code, district_code;
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code;
 
--- Health Center Coverage Rate
+CREATE UNIQUE INDEX idx_dm_cov_daily_healthcenter ON dm_coverage_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
+
+-- 5. SPP LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_spp AS
 SELECT
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    SUM(total_administered_successfully) AS hc_children_vaccinated,
-    ROUND((SUM(total_administered_successfully)::NUMERIC / NULLIF(SUM(total_task_submissions), 0)) * 100, 2) AS hc_coverage_rate
-FROM dm_coverage_daily_healthcenter
-GROUP BY country_code, province_code, district_code, healthcenter_code;
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code;
 
---==========================================================================
+CREATE UNIQUE INDEX idx_dm_cov_daily_spp ON dm_coverage_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
 
-
--- DATA MART 2
-
-
---==========================================================================
-
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Country)
+-- 6. VILLAGE LEVEL
+CREATE MATERIALIZED VIEW dm_coverage_daily_village AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS could_not_vaccinate_count,
+    COUNT(id) AS total_task_submissions
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code;
+
+CREATE UNIQUE INDEX idx_dm_cov_daily_village ON dm_coverage_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
+
+
+-- ============================================================================
+-- ============================================================================
+--                             DATA MART 2
+--                  REGISTRATION / ENUMERATION MART (No Joins)
+-- ============================================================================
+-- ============================================================================
+
+-- 1. COUNTRY LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_country AS
+SELECT
+    campaign_id, tenant_id, task_dates AS task_date, country_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY campaign_id, boundary_hierarchy_code->>'country';
+GROUP BY campaign_id, tenant_id, task_dates, country_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Country)
-SELECT
-    campaign_id,
-    country_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_country
-GROUP BY campaign_id, country_code;
+CREATE UNIQUE INDEX idx_dm_reg_daily_country ON dm_registration_daily_country(campaign_id, tenant_id, task_date, country_code);
 
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Province)
+-- 2. PROVINCE LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_province AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY
-    campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province';
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Province)
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_province
-GROUP BY campaign_id, country_code, province_code;
+CREATE UNIQUE INDEX idx_dm_reg_daily_province ON dm_registration_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
 
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (District)
+-- 3. DISTRICT LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_district AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY
-    campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district';
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (District)
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_district
-GROUP BY campaign_id, country_code, province_code, district_code;
+CREATE UNIQUE INDEX idx_dm_reg_daily_district ON dm_registration_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
 
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Health Center)
+-- 4. HEALTH CENTER LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_healthcenter AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY
-    campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter';
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Health Center)
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_healthcenter
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code;
+CREATE UNIQUE INDEX idx_dm_reg_daily_healthcenter ON dm_registration_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
 
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (SPP)
+-- 5. SPP LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_spp AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-    boundary_hierarchy_code->>'spp' AS spp_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY
-    campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter',
-    boundary_hierarchy_code->>'spp';
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (SPP)
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    spp_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_spp
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code;
+CREATE UNIQUE INDEX idx_dm_reg_daily_spp ON dm_registration_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
 
--- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Village)
+-- 6. VILLAGE LEVEL
+CREATE MATERIALIZED VIEW dm_registration_daily_village AS
 SELECT
-    campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-    boundary_hierarchy_code->>'spp' AS spp_code,
-    boundary_hierarchy_code->>'village' AS village_code,
-    COUNT(DISTINCT household_id) AS total_households_registered
+    campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code,
+    COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
+    COUNT(CASE WHEN age BETWEEN 12 AND 23 THEN 1 END) AS children_12_23m,
+    COUNT(CASE WHEN age BETWEEN 24 AND 59 THEN 1 END) AS children_24_59m,
+    COUNT(CASE WHEN UPPER(gender) = 'MALE' THEN 1 END) AS male_count,
+    COUNT(CASE WHEN UPPER(gender) = 'FEMALE' THEN 1 END) AS female_count,
+    COUNT(DISTINCT household_id) AS total_households
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY
-    campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter',
-    boundary_hierarchy_code->>'spp',
-    boundary_hierarchy_code->>'village';
+GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code;
 
--- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Village)
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    spp_code,
-    village_code,
-    SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
-    SUM(children_0_11m) AS sum_0_to_11_months,
-    SUM(children_12_23m) AS sum_12_to_23_months,
-    SUM(children_24_59m) AS sum_24_to_59_months,
-    SUM(male_count) AS total_males,
-    SUM(female_count) AS total_females
-FROM dm_registration_daily_village
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code;
-
---==========================================================================
-
-
--- DATA MART 3
-
-
---==========================================================================
-
--- ============================================================================
--- PHASE 2: PRODUCTION-READY KPI QUERIES (DASHBOARD LAYER)
--- ============================================================================
-
--- ============================================================================
--- KPI 1: REFUSAL / ABSENCE REASONS BREAKDOWN
--- ============================================================================
--- Added `reason_type` so dashboards can separate absence reasons from refusal reasons
-SELECT
-    campaign_id,
-    country_code,
-    reason_type,
-    reason_code,
-    SUM(refusal_count) AS total_refusals,
-    SUM(absence_count) AS total_absences
-FROM dm_refusals_daily_country
-WHERE reason_type IN ('REFUSAL', 'ABSENCE')
-GROUP BY campaign_id, country_code, reason_type, reason_code
-ORDER BY total_refusals DESC, total_absences DESC;
+CREATE UNIQUE INDEX idx_dm_reg_daily_village ON dm_registration_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
 
 
 -- ============================================================================
--- KPI 2: TOTAL CAMPAIGN REFUSAL & ABSENCE RATES (COUNTRY)
 -- ============================================================================
-WITH DailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_country
-    GROUP BY campaign_id, country_code, task_date
+--                             DATA MART 3
+--                           REFUSALS MART
+-- ============================================================================
+-- ============================================================================
+
+-- 1. COUNTRY LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_country AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
-SELECT
-    campaign_id,
-    country_code,
-    SUM(daily_refusals) AS total_refusals,
-    SUM(daily_absences) AS total_absences,
-    SUM(daily_tasks) AS overarching_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS refusal_rate_percentage,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS absence_rate_percentage
-FROM DailyTotals
-GROUP BY campaign_id, country_code;
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code;
 
+CREATE UNIQUE INDEX idx_dm_refusals_country ON dm_refusals_daily_country(campaign_id, tenant_id, task_date, country_code, reason_type, reason_code);
 
--- ============================================================================
--- KPI 3: REFUSAL & ABSENCE RATES (PROVINCE)
--- ============================================================================
-WITH ProvinceDailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        province_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_province
-    GROUP BY campaign_id, country_code, province_code, task_date
+-- 2. PROVINCE LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_province AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    SUM(daily_refusals) AS province_refusals,
-    SUM(daily_absences) AS province_absences,
-    SUM(daily_tasks) AS province_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS province_refusal_rate,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS province_absence_rate
-FROM ProvinceDailyTotals
-GROUP BY campaign_id, country_code, province_code;
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code;
 
+CREATE UNIQUE INDEX idx_dm_refusals_province ON dm_refusals_daily_province(campaign_id, tenant_id, task_date, country_code, province_code, reason_type, reason_code);
 
--- ============================================================================
--- KPI 4: REFUSAL & ABSENCE RATES (DISTRICT)
--- ============================================================================
-WITH DistrictDailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        province_code,
-        district_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_district
-    GROUP BY campaign_id, country_code, province_code, district_code, task_date
+-- 3. DISTRICT LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_district AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    SUM(daily_refusals) AS district_refusals,
-    SUM(daily_absences) AS district_absences,
-    SUM(daily_tasks) AS district_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS district_refusal_rate,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS district_absence_rate
-FROM DistrictDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code;
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code;
 
+CREATE UNIQUE INDEX idx_dm_refusals_district ON dm_refusals_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code, reason_type, reason_code);
 
--- ============================================================================
--- KPI 5: REFUSAL & ABSENCE RATES (HEALTH CENTER)
--- ============================================================================
-WITH HealthCenterDailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        province_code,
-        district_code,
-        healthcenter_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_healthcenter
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, task_date
+-- 4. HEALTH CENTER LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_healthcenter AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    SUM(daily_refusals) AS hc_refusals,
-    SUM(daily_absences) AS hc_absences,
-    SUM(daily_tasks) AS hc_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_refusal_rate,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_absence_rate
-FROM HealthCenterDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code;
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code;
 
+CREATE UNIQUE INDEX idx_dm_refusals_healthcenter ON dm_refusals_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, reason_type, reason_code);
 
--- ============================================================================
--- KPI 6: REFUSAL & ABSENCE RATES (SPP)
--- ============================================================================
-
-WITH SppDailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        province_code,
-        district_code,
-        healthcenter_code,
-        spp_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_spp
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, task_date
+-- 5. SPP LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_spp AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
-SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    spp_code,
-    SUM(daily_refusals) AS spp_refusals,
-    SUM(daily_absences) AS spp_absences,
-    SUM(daily_tasks) AS spp_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_refusal_rate,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_absence_rate
-FROM SppDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code;
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.spp_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code AND f.spp_code = t.spp_code;
 
+CREATE UNIQUE INDEX idx_dm_refusals_spp ON dm_refusals_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, reason_type, reason_code);
 
--- ============================================================================
--- KPI 7: REFUSAL & ABSENCE RATES (VILLAGE)
--- ============================================================================
-WITH VillageDailyTotals AS (
-    SELECT
-        campaign_id,
-        country_code,
-        province_code,
-        district_code,
-        healthcenter_code,
-        spp_code,
-        village_code,
-        task_date,
-        SUM(refusal_count) AS daily_refusals,
-        SUM(absence_count) AS daily_absences,
-        MAX(total_task_submissions) AS daily_tasks
-    FROM dm_refusals_daily_village
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code, task_date
+-- 6. VILLAGE LEVEL
+CREATE MATERIALIZED VIEW dm_refusals_daily_village AS
+WITH total_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code, COUNT(id) AS total_task_submissions
+    FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code
+),
+failed_tasks AS (
+    SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END AS reason_type,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN') AS reason_code,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 1 END) AS refusal_count,
+        COUNT(CASE WHEN additional_details->>'refusalReason' IS NULL AND additional_details->>'absenceReason' IS NOT NULL THEN 1 END) AS absence_count
+    FROM project_task_enriched WHERE is_deleted = FALSE AND administration_status = 'ADMINISTRATION_UNSUCCESSFUL'
+    GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code,
+        CASE WHEN additional_details->>'refusalReason' IS NOT NULL THEN 'REFUSAL' WHEN additional_details->>'absenceReason' IS NOT NULL THEN 'ABSENCE' ELSE 'UNSPECIFIED' END,
+        COALESCE(additional_details->>'refusalReason', additional_details->>'absenceReason', 'UNKNOWN')
 )
+SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.spp_code, f.village_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
+FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code AND f.spp_code = t.spp_code AND f.village_code = t.village_code;
+
+CREATE UNIQUE INDEX idx_dm_refusals_village ON dm_refusals_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code, reason_type, reason_code);
+
+
+-- ============================================================================
+-- ============================================================================
+--                             DATA MART 4
+--                  STOCK INVENTORY MART (Event-Driven)
+-- ============================================================================
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS dm_stock_daily AS
+    WITH unified_stock_events AS (
+        SELECT
+        campaign_id, facility_id, facility_name, facility_level, facility_target, product_name,
+        TO_TIMESTAMP(date_of_entry / 1000)::DATE AS transaction_date,
+    CASE WHEN event_type = 'RECEIVED' THEN physical_count ELSE 0 END AS received_qty,
+    CASE WHEN event_type = 'ISSUED' THEN physical_count ELSE 0 END AS issued_qty,
+    CASE WHEN event_type = 'RETURNED' THEN physical_count ELSE 0 END AS returned_qty,
+    CASE WHEN event_type = 'DAMAGED' THEN physical_count ELSE 0 END AS damaged_qty,
+    date_of_entry AS last_movement_time_ms
+    FROM stock_enriched
+    WHERE event_type IN ('RECEIVED', 'ISSUED', 'RETURNED', 'DAMAGED')
+    )
 SELECT
-    campaign_id,
-    country_code,
-    province_code,
-    district_code,
-    healthcenter_code,
-    spp_code,
-    village_code,
-    SUM(daily_refusals) AS village_refusals,
-    SUM(daily_absences) AS village_absences,
-    SUM(daily_tasks) AS village_task_total,
-    (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_refusal_rate,
-    (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_absence_rate
-FROM VillageDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code;
-
---==========================================================================
+    campaign_id, facility_id, facility_name, facility_level, facility_target, product_name, transaction_date,
+    SUM(received_qty) AS total_received,
+    SUM(issued_qty) AS total_issued,
+    SUM(returned_qty) AS total_returned,
+    SUM(damaged_qty) AS total_damaged,
+    (SUM(received_qty) - SUM(issued_qty) + SUM(returned_qty) - SUM(damaged_qty)) AS calculated_balance,
+    TO_TIMESTAMP(NULLIF(MAX(last_movement_time_ms), 0) / 1000) AS last_movement_timestamp
+FROM unified_stock_events
+GROUP BY campaign_id, facility_id, facility_name, facility_level, facility_target, product_name, transaction_date;
 
 
--- DATA MART 4
+-- ============================================================================
+-- ============================================================================
+--                             DATA MART 5
+--                    TEAM PERFORMANCE / TELEMETRY MART
+-- ============================================================================
+-- ============================================================================
 
-
---==========================================================================
-
-
+CREATE TABLE IF NOT EXISTS dm_team_performance_daily AS
 SELECT
-    campaign_id,
-    facility_id,
-    facility_name,
-    facility_level,
-    product_name,
-    transaction_date,
+    campaign_id, user_name, TO_TIMESTAMP(created_time / 1000)::DATE AS task_date, locality_code,
+    MAX(country_code) AS country_code, MAX(province_code) AS province_code, MAX(district_code) AS district_code, MAX(health_center_code) AS health_center_code,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_FAILED' THEN 1 END) AS total_failed,
+    COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_vaccinated,
+    COUNT(id) AS total_submissions,
+    MIN(created_time) AS first_submission_time_ms,
+    MAX(created_time) AS last_submission_time_ms,
+    MIN(synced_time) AS first_synced_time_ms,
+    AVG(CASE WHEN synced_time IS NOT NULL AND created_time IS NOT NULL THEN GREATEST((synced_time - created_time), 0) / 60000.0 ELSE NULL END) AS avg_sync_lag_minutes,
+    COUNT(CASE WHEN (synced_time - created_time) / 60000.0 < 60 THEN 1 END) AS sync_within_1hr,
+    COUNT(CASE WHEN (synced_time - created_time) / 60000.0 >= 60 AND (synced_time - created_time) / 60000.0 < 360 THEN 1 END) AS sync_1_6hr,
+    COUNT(CASE WHEN (synced_time - created_time) / 60000.0 >= 360 AND (synced_time - created_time) / 60000.0 <= 1440 THEN 1 END) AS sync_6_24hr,
+    COUNT(CASE WHEN (synced_time - created_time) / 60000.0 > 1440 THEN 1 END) AS sync_over_24hr
+FROM project_task_enriched
+WHERE task_type IS NOT NULL
+GROUP BY campaign_id, user_name, TO_TIMESTAMP(created_time / 1000)::DATE, locality_code;
 
-    -- ==========================================
-    -- KPI 1: Vials Issued per Team/Day
-    -- ==========================================
-    total_issued AS vials_issued,
-
-    -- ==========================================
-    -- KPI 2: Doses Administered (Estimated)
-    -- ==========================================
-    -- NOTE: Replace '10' with your actual doses-per-vial multiplier if applicable.
-    (total_issued - total_returned) * 10 AS estimated_doses_administered,
-
-    -- ==========================================
-    -- KPI 3: Wastage Rate (%)
-    -- ==========================================
-    CASE
-        -- Prevent division by zero if nothing was handled that day
-        WHEN (total_issued - total_returned + total_damaged) = 0 THEN 0.00
-        ELSE ROUND(
-                (total_damaged::NUMERIC / (total_issued - total_returned + total_damaged)) * 100,
-                2
-             )
-        END AS wastage_rate_pct,
-
-    -- ==========================================
-    -- KPI 4: Stock-out Risk (%)
-    -- ==========================================
-    CASE
-        -- Cannot calculate risk if there is no target set for the facility
-        WHEN facility_target = 0 OR facility_target IS NULL THEN NULL
-        ELSE ROUND(
-                (calculated_balance::NUMERIC / facility_target) * 100,
-                2
-             )
-        END AS stock_out_risk_pct,
-
-    -- Carry forward audit timestamps for dashboard context
-    last_movement_timestamp
-
-FROM dm_stock_daily;
-
---==========================================================================
+CREATE INDEX IF NOT EXISTS idx_team_perf_daily ON dm_team_performance_daily (campaign_id, user_name, task_date, locality_code);
 
 
--- DATA MART 5
 
+-- ============================================================================
+-- ============================================================================
+--                             DATA MART 8
+--                         DATA QUALITY MART
+-- ============================================================================
+-- ============================================================================
 
---==========================================================================
-
-
+CREATE MATERIALIZED VIEW dm_data_quality_daily AS
 SELECT
+    project_id,
     campaign_id,
-    user_name,
-    task_date,
+    tenant_id,
+    task_dates AS task_date,
     locality_code,
 
-    -- ==========================================
-    -- KPI 1: Children Vaccinated & Submission Velocity (Per Locality)
-    -- ==========================================
-    total_vaccinated AS children_vaccinated_in_locality,
-    total_submissions AS locality_submission_velocity,
+    -- Flattened Geographic Columns (Aggregated cleanly at the locality grain)
+    MAX(country_code) AS country_code,
+    MAX(province_code) AS province_code,
+    MAX(district_code) AS district_code,
+    MAX(health_center_code) AS health_center_code,
+    MAX(spp_code) AS spp_code,
+    MAX(village_code) AS village_code,
 
     -- ==========================================
-    -- KPI 2: Average Sync Lag (Per Locality)
+    -- DATA QUALITY METRICS
     -- ==========================================
-    ROUND(avg_sync_lag_minutes::NUMERIC, 2) AS avg_sync_lag_minutes,
+    COUNT(id) AS total_records,
 
-    -- ==========================================
-    -- KPI 3: Sync Rate (%)
-    -- ==========================================
-    CASE
-        WHEN total_submissions = 0 THEN 0.00
-        ELSE ROUND(
-                (
-                    (sync_within_1hr + sync_1_6hr + sync_6_24hr + sync_over_24hr)::NUMERIC
-                    / total_submissions
-            ) * 100,
-            2
-        )
-        END AS sync_rate_pct,
+    COUNT(CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL THEN 1 END) AS gps_value_count,
 
-    -- ==========================================
-    -- KPI 4: Sync Timing Distribution (%)
-    -- ==========================================
-    CASE WHEN total_submissions = 0 THEN 0.00 ELSE ROUND((sync_within_1hr::NUMERIC / total_submissions) * 100, 2) END AS pct_synced_under_1hr,
-    CASE WHEN total_submissions = 0 THEN 0.00 ELSE ROUND((sync_1_6hr::NUMERIC / total_submissions) * 100, 2) END AS pct_synced_1_to_6hr,
-    CASE WHEN total_submissions = 0 THEN 0.00 ELSE ROUND((sync_6_24hr::NUMERIC / total_submissions) * 100, 2) END AS pct_synced_6_to_24hr,
-    CASE WHEN total_submissions = 0 THEN 0.00 ELSE ROUND((sync_over_24hr::NUMERIC / total_submissions) * 100, 2) END AS pct_synced_over_24hr,
+    COUNT(CASE WHEN latitude IS NULL OR longitude IS NULL THEN 1 END) AS gps_missing,
 
-    -- ==========================================
-    -- KPI 5: Locality Work Hours
-    -- ==========================================
-    TO_TIMESTAMP(first_submission_time_ms / 1000) AS locality_start_time,
-    TO_TIMESTAMP(last_submission_time_ms / 1000) AS locality_end_time
+    COUNT(CASE WHEN location_accuracy > 50 THEN 1 END) AS gps_accuracy_flagged_count,
 
-FROM dm_team_performance_daily;
+    ROUND(AVG(location_accuracy)::NUMERIC, 2) AS avg_gps_accuracy,
 
+    COUNT(CASE WHEN created_time < synced_time THEN 1 END) AS timestamp_valid_count,
 
+    -- Form Completeness (Checking required fields)
+    COUNT(CASE
+              WHEN project_beneficiary_client_reference_id IS NOT NULL
+                  AND delivered_to IS NOT NULL
+                  AND product_variant IS NOT NULL
+                  THEN 1
+        END) AS form_complete_count
 
+FROM project_task_enriched
+WHERE is_deleted = FALSE
+GROUP BY
+    project_id,
+    campaign_id,
+    tenant_id,
+    task_dates,
+    locality_code;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- Create Unique Index for Concurrent Refreshes
+CREATE UNIQUE INDEX idx_dm_data_quality_daily
+    ON dm_data_quality_daily (project_id, campaign_id, tenant_id, task_date, locality_code);
 
 
