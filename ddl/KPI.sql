@@ -1,11 +1,6 @@
 --==========================================================================
-
-
 -- DATA MART 1
-
-
 --==========================================================================
-
 
 -- Total Children Vaccinated (Overall Campaign)
 SELECT
@@ -48,28 +43,24 @@ SELECT
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     SUM(total_administered_successfully) AS hc_children_vaccinated,
     ROUND((SUM(total_administered_successfully)::NUMERIC / NULLIF(SUM(total_task_submissions), 0)) * 100, 2) AS hc_coverage_rate
 FROM dm_coverage_daily_healthcenter
-GROUP BY country_code, province_code, district_code, healthcenter_code;
+GROUP BY country_code, province_code, district_code, health_center_code;
 
 --==========================================================================
-
-
-                            -- DATA MART 2
-
-
+-- DATA MART 2
 --==========================================================================
 
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Country)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
+    country_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
-GROUP BY campaign_id, boundary_hierarchy_code->>'country';
+GROUP BY campaign_id, country_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Country)
 SELECT
@@ -87,15 +78,15 @@ GROUP BY campaign_id, country_code;
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Province)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
+    country_code,
+    province_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY
     campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province';
+    country_code,
+    province_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Province)
 SELECT
@@ -114,17 +105,17 @@ GROUP BY campaign_id, country_code, province_code;
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (District)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
+    country_code,
+    province_code,
+    district_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY
     campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district';
+    country_code,
+    province_code,
+    district_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (District)
 SELECT
@@ -144,19 +135,19 @@ GROUP BY campaign_id, country_code, province_code, district_code;
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Health Center)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
+    country_code,
+    province_code,
+    district_code,
+    health_center_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY
     campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter';
+    country_code,
+    province_code,
+    district_code,
+    health_center_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Health Center)
 SELECT
@@ -164,7 +155,7 @@ SELECT
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
     SUM(children_0_11m) AS sum_0_to_11_months,
     SUM(children_12_23m) AS sum_12_to_23_months,
@@ -172,26 +163,26 @@ SELECT
     SUM(male_count) AS total_males,
     SUM(female_count) AS total_females
 FROM dm_registration_daily_healthcenter
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code;
 
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (SPP)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-    boundary_hierarchy_code->>'spp' AS spp_code,
+    country_code,
+    province_code,
+    district_code,
+    health_center_code,
+    spp_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY
     campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter',
-    boundary_hierarchy_code->>'spp';
+    country_code,
+    province_code,
+    district_code,
+    health_center_code,
+    spp_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (SPP)
 SELECT
@@ -199,7 +190,7 @@ SELECT
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     spp_code,
     SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
     SUM(children_0_11m) AS sum_0_to_11_months,
@@ -208,28 +199,28 @@ SELECT
     SUM(male_count) AS total_males,
     SUM(female_count) AS total_females
 FROM dm_registration_daily_spp
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code;
 
 -- KPI 1: TOTAL HOUSEHOLDS REGISTERED (Village)
 SELECT
     campaign_id,
-    boundary_hierarchy_code->>'country' AS country_code,
-    boundary_hierarchy_code->>'province' AS province_code,
-    boundary_hierarchy_code->>'district' AS district_code,
-    boundary_hierarchy_code->>'healthCenter' AS healthcenter_code,
-    boundary_hierarchy_code->>'spp' AS spp_code,
-    boundary_hierarchy_code->>'village' AS village_code,
+    country_code,
+    province_code,
+    district_code,
+    health_center_code,
+    spp_code,
+    village_code,
     COUNT(DISTINCT household_id) AS total_households_registered
 FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY
     campaign_id,
-    boundary_hierarchy_code->>'country',
-    boundary_hierarchy_code->>'province',
-    boundary_hierarchy_code->>'district',
-    boundary_hierarchy_code->>'healthCenter',
-    boundary_hierarchy_code->>'spp',
-    boundary_hierarchy_code->>'village';
+    country_code,
+    province_code,
+    district_code,
+    health_center_code,
+    spp_code,
+    village_code;
 
 -- KPI 2, 3 & 4: ENUMERATION, AGE, AND GENDER (Village)
 SELECT
@@ -237,7 +228,7 @@ SELECT
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     spp_code,
     village_code,
     SUM(children_0_11m + children_12_23m + children_24_59m) AS total_children_enumerated,
@@ -247,14 +238,10 @@ SELECT
     SUM(male_count) AS total_males,
     SUM(female_count) AS total_females
 FROM dm_registration_daily_village
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code, village_code;
 
 --==========================================================================
-
-
-                            -- DATA MART 3
-
-
+-- DATA MART 3
 --==========================================================================
 
 -- ============================================================================
@@ -264,7 +251,6 @@ GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_c
 -- ============================================================================
 -- KPI 1: REFUSAL / ABSENCE REASONS BREAKDOWN
 -- ============================================================================
--- Added `reason_type` so dashboards can separate absence reasons from refusal reasons
 SELECT
     campaign_id,
     country_code,
@@ -371,27 +357,27 @@ WITH HealthCenterDailyTotals AS (
         country_code,
         province_code,
         district_code,
-        healthcenter_code,
+        health_center_code,
         task_date,
         SUM(refusal_count) AS daily_refusals,
         SUM(absence_count) AS daily_absences,
         MAX(total_task_submissions) AS daily_tasks
     FROM dm_refusals_daily_healthcenter
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, task_date
+    GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, task_date
 )
 SELECT
     campaign_id,
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     SUM(daily_refusals) AS hc_refusals,
     SUM(daily_absences) AS hc_absences,
     SUM(daily_tasks) AS hc_task_total,
     (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_refusal_rate,
     (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS hc_absence_rate
 FROM HealthCenterDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code;
 
 
 -- ============================================================================
@@ -404,21 +390,21 @@ WITH SppDailyTotals AS (
         country_code,
         province_code,
         district_code,
-        healthcenter_code,
+        health_center_code,
         spp_code,
         task_date,
         SUM(refusal_count) AS daily_refusals,
         SUM(absence_count) AS daily_absences,
         MAX(total_task_submissions) AS daily_tasks
     FROM dm_refusals_daily_spp
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, task_date
+    GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code, task_date
 )
 SELECT
     campaign_id,
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     spp_code,
     SUM(daily_refusals) AS spp_refusals,
     SUM(daily_absences) AS spp_absences,
@@ -426,7 +412,7 @@ SELECT
     (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_refusal_rate,
     (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS spp_absence_rate
 FROM SppDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code;
 
 
 -- ============================================================================
@@ -438,7 +424,7 @@ WITH VillageDailyTotals AS (
         country_code,
         province_code,
         district_code,
-        healthcenter_code,
+        health_center_code,
         spp_code,
         village_code,
         task_date,
@@ -446,14 +432,14 @@ WITH VillageDailyTotals AS (
         SUM(absence_count) AS daily_absences,
         MAX(total_task_submissions) AS daily_tasks
     FROM dm_refusals_daily_village
-    GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code, task_date
+    GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code, village_code, task_date
 )
 SELECT
     campaign_id,
     country_code,
     province_code,
     district_code,
-    healthcenter_code,
+    health_center_code,
     spp_code,
     village_code,
     SUM(daily_refusals) AS village_refusals,
@@ -462,16 +448,11 @@ SELECT
     (SUM(daily_refusals)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_refusal_rate,
     (SUM(daily_absences)::DECIMAL / NULLIF(SUM(daily_tasks), 0)) * 100 AS village_absence_rate
 FROM VillageDailyTotals
-GROUP BY campaign_id, country_code, province_code, district_code, healthcenter_code, spp_code, village_code;
+GROUP BY campaign_id, country_code, province_code, district_code, health_center_code, spp_code, village_code;
 
 --==========================================================================
-
-
-                            -- DATA MART 4
-
-
+-- DATA MART 4
 --==========================================================================
-
 
 SELECT
     campaign_id,
@@ -522,13 +503,8 @@ SELECT
 FROM dm_stock_daily;
 
 --==========================================================================
-
-
-                            -- DATA MART 5
-
-
+-- DATA MART 5
 --==========================================================================
-
 
 SELECT
     campaign_id,
@@ -576,71 +552,3 @@ SELECT
     TO_TIMESTAMP(last_submission_time_ms / 1000) AS locality_end_time
 
 FROM dm_team_performance_daily;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
