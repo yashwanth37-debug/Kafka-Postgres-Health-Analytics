@@ -1,12 +1,8 @@
 -- ============================================================================
--- ============================================================================
---                             DATA MART 1
---                 COVERAGE MART (Unified and Flattened)
--- ============================================================================
+-- DATA MART 1: COVERAGE MART
 -- ============================================================================
 
--- 1. COUNTRY LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_country AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_country AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -16,10 +12,9 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_country ON dm_coverage_daily_country(campaign_id, tenant_id, task_date, country_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_country ON dm_coverage_daily_country(campaign_id, tenant_id, task_date, country_code);
 
--- 2. PROVINCE LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_province AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_province AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -29,10 +24,9 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_province ON dm_coverage_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_province ON dm_coverage_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
 
--- 3. DISTRICT LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_district AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_district AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -42,10 +36,9 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_district ON dm_coverage_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_district ON dm_coverage_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
 
--- 4. HEALTH CENTER LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_healthcenter AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_healthcenter AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -55,10 +48,9 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_healthcenter ON dm_coverage_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_healthcenter ON dm_coverage_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
 
--- 5. SPP LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_spp AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_spp AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -68,10 +60,9 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_spp ON dm_coverage_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_spp ON dm_coverage_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
 
--- 6. VILLAGE LEVEL
-CREATE MATERIALIZED VIEW dm_coverage_daily_village AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_coverage_daily_village AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code,
     COUNT(CASE WHEN administration_status = 'ADMINISTRATION_SUCCESS' THEN 1 END) AS total_administered_successfully,
@@ -81,18 +72,13 @@ FROM project_task_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code;
 
-CREATE UNIQUE INDEX idx_dm_cov_daily_village ON dm_coverage_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_cov_daily_village ON dm_coverage_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
 
-
 -- ============================================================================
--- ============================================================================
---                             DATA MART 2
---                  REGISTRATION / ENUMERATION MART (No Joins)
--- ============================================================================
+-- DATA MART 2: REGISTRATION MART
 -- ============================================================================
 
--- 1. COUNTRY LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_country AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_country AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -105,10 +91,9 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_country ON dm_registration_daily_country(campaign_id, tenant_id, task_date, country_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_country ON dm_registration_daily_country(campaign_id, tenant_id, task_date, country_code);
 
--- 2. PROVINCE LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_province AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_province AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -121,10 +106,9 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_province ON dm_registration_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_province ON dm_registration_daily_province(campaign_id, tenant_id, task_date, country_code, province_code);
 
--- 3. DISTRICT LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_district AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_district AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -137,10 +121,9 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_district ON dm_registration_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_district ON dm_registration_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code);
 
--- 4. HEALTH CENTER LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_healthcenter AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_healthcenter AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -153,10 +136,9 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_healthcenter ON dm_registration_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_healthcenter ON dm_registration_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code);
 
--- 5. SPP LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_spp AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_spp AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -169,10 +151,9 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_spp ON dm_registration_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_spp ON dm_registration_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code);
 
--- 6. VILLAGE LEVEL
-CREATE MATERIALIZED VIEW dm_registration_daily_village AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_registration_daily_village AS
 SELECT
     campaign_id, tenant_id, task_dates AS task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code,
     COUNT(CASE WHEN age BETWEEN 0 AND 11 THEN 1 END) AS children_0_11m,
@@ -185,18 +166,13 @@ FROM household_member_enriched
 WHERE is_deleted = FALSE
 GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code;
 
-CREATE UNIQUE INDEX idx_dm_reg_daily_village ON dm_registration_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_reg_daily_village ON dm_registration_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code);
 
-
 -- ============================================================================
--- ============================================================================
---                             DATA MART 3
---                           REFUSALS MART
--- ============================================================================
+-- DATA MART 3: REFUSALS MART
 -- ============================================================================
 
--- 1. COUNTRY LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_country AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_country AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code
@@ -215,10 +191,9 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_country ON dm_refusals_daily_country(campaign_id, tenant_id, task_date, country_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_country ON dm_refusals_daily_country(campaign_id, tenant_id, task_date, country_code, reason_type, reason_code);
 
--- 2. PROVINCE LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_province AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_province AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, province_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code
@@ -237,10 +212,9 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_province ON dm_refusals_daily_province(campaign_id, tenant_id, task_date, country_code, province_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_province ON dm_refusals_daily_province(campaign_id, tenant_id, task_date, country_code, province_code, reason_type, reason_code);
 
--- 3. DISTRICT LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_district AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_district AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code
@@ -259,10 +233,9 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_district ON dm_refusals_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_district ON dm_refusals_daily_district(campaign_id, tenant_id, task_date, country_code, province_code, district_code, reason_type, reason_code);
 
--- 4. HEALTH CENTER LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_healthcenter AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_healthcenter AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code
@@ -281,10 +254,9 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_healthcenter ON dm_refusals_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_healthcenter ON dm_refusals_daily_healthcenter(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, reason_type, reason_code);
 
--- 5. SPP LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_spp AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_spp AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code
@@ -303,10 +275,9 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.spp_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code AND f.spp_code = t.spp_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_spp ON dm_refusals_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_spp ON dm_refusals_daily_spp(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, reason_type, reason_code);
 
--- 6. VILLAGE LEVEL
-CREATE MATERIALIZED VIEW dm_refusals_daily_village AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_refusals_daily_village AS
 WITH total_tasks AS (
     SELECT campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code, COUNT(id) AS total_task_submissions
     FROM project_task_enriched WHERE is_deleted = FALSE GROUP BY campaign_id, tenant_id, task_dates, country_code, province_code, district_code, health_center_code, spp_code, village_code
@@ -325,29 +296,25 @@ failed_tasks AS (
 SELECT f.campaign_id, f.tenant_id, f.task_dates AS task_date, f.country_code, f.province_code, f.district_code, f.health_center_code, f.spp_code, f.village_code, f.reason_type, f.reason_code, f.refusal_count, f.absence_count, COALESCE(t.total_task_submissions, 0) AS total_task_submissions
 FROM failed_tasks f LEFT JOIN total_tasks t ON f.campaign_id = t.campaign_id AND f.tenant_id = t.tenant_id AND f.task_dates = t.task_dates AND f.country_code = t.country_code AND f.province_code = t.province_code AND f.district_code = t.district_code AND f.health_center_code = t.health_center_code AND f.spp_code = t.spp_code AND f.village_code = t.village_code;
 
-CREATE UNIQUE INDEX idx_dm_refusals_village ON dm_refusals_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code, reason_type, reason_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_refusals_village ON dm_refusals_daily_village(campaign_id, tenant_id, task_date, country_code, province_code, district_code, health_center_code, spp_code, village_code, reason_type, reason_code);
 
-
 -- ============================================================================
--- ============================================================================
---                             DATA MART 4
---                  STOCK INVENTORY MART (Event-Driven)
--- ============================================================================
+-- DATA MART 4: STOCK INVENTORY MART
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS dm_stock_daily AS
-    WITH unified_stock_events AS (
-        SELECT
+CREATE OR REPLACE MATERIALIZED VIEW dm_stock_daily AS
+WITH unified_stock_events AS (
+    SELECT
         campaign_id, facility_id, facility_name, facility_level, facility_target, product_name,
         TO_TIMESTAMP(date_of_entry / 1000)::DATE AS transaction_date,
-    CASE WHEN event_type = 'RECEIVED' THEN physical_count ELSE 0 END AS received_qty,
-    CASE WHEN event_type = 'ISSUED' THEN physical_count ELSE 0 END AS issued_qty,
-    CASE WHEN event_type = 'RETURNED' THEN physical_count ELSE 0 END AS returned_qty,
-    CASE WHEN event_type = 'DAMAGED' THEN physical_count ELSE 0 END AS damaged_qty,
-    date_of_entry AS last_movement_time_ms
+        CASE WHEN event_type = 'RECEIVED' THEN physical_count ELSE 0 END AS received_qty,
+        CASE WHEN event_type = 'ISSUED' THEN physical_count ELSE 0 END AS issued_qty,
+        CASE WHEN event_type = 'RETURNED' THEN physical_count ELSE 0 END AS returned_qty,
+        CASE WHEN event_type = 'DAMAGED' THEN physical_count ELSE 0 END AS damaged_qty,
+        date_of_entry AS last_movement_time_ms
     FROM stock_enriched
     WHERE event_type IN ('RECEIVED', 'ISSUED', 'RETURNED', 'DAMAGED')
-    )
+)
 SELECT
     campaign_id, facility_id, facility_name, facility_level, facility_target, product_name, transaction_date,
     SUM(received_qty) AS total_received,
@@ -359,15 +326,14 @@ SELECT
 FROM unified_stock_events
 GROUP BY campaign_id, facility_id, facility_name, facility_level, facility_target, product_name, transaction_date;
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_stock_daily
+    ON dm_stock_daily (campaign_id, facility_id, product_name, transaction_date);
 
 -- ============================================================================
--- ============================================================================
---                             DATA MART 5
---                    TEAM PERFORMANCE / TELEMETRY MART
--- ============================================================================
+-- DATA MART 5: TEAM PERFORMANCE / TELEMETRY MART
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS dm_team_performance_daily AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_team_performance_daily AS
 SELECT
     campaign_id, user_name, TO_TIMESTAMP(created_time / 1000)::DATE AS task_date, locality_code,
     MAX(country_code) AS country_code, MAX(province_code) AS province_code, MAX(district_code) AS district_code, MAX(health_center_code) AS health_center_code,
@@ -386,18 +352,14 @@ FROM project_task_enriched
 WHERE task_type IS NOT NULL
 GROUP BY campaign_id, user_name, TO_TIMESTAMP(created_time / 1000)::DATE, locality_code;
 
-CREATE INDEX IF NOT EXISTS idx_team_perf_daily ON dm_team_performance_daily (campaign_id, user_name, task_date, locality_code);
-
-
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_team_performance_daily
+    ON dm_team_performance_daily (campaign_id, user_name, task_date, locality_code);
 
 -- ============================================================================
--- ============================================================================
---                             DATA MART 8
---                         DATA QUALITY MART
--- ============================================================================
+-- DATA MART 8: DATA QUALITY MART
 -- ============================================================================
 
-CREATE MATERIALIZED VIEW dm_data_quality_daily AS
+CREATE OR REPLACE MATERIALIZED VIEW dm_data_quality_daily AS
 SELECT
     project_id,
     campaign_id,
@@ -445,8 +407,5 @@ GROUP BY
     task_dates,
     locality_code;
 
--- Create Unique Index for Concurrent Refreshes
-CREATE UNIQUE INDEX idx_dm_data_quality_daily
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dm_data_quality_daily
     ON dm_data_quality_daily (project_id, campaign_id, tenant_id, task_date, locality_code);
-
-
