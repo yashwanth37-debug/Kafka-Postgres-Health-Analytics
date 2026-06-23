@@ -69,10 +69,9 @@ CREATE TABLE IF NOT EXISTS household_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS household_member_enriched (
-    -- HouseholdMember core fields
     id                                      VARCHAR(64)     PRIMARY KEY,
     tenant_id                               VARCHAR(1000)   NOT NULL,
     client_reference_id                     VARCHAR(64)     NOT NULL,
@@ -84,30 +83,24 @@ CREATE TABLE IF NOT EXISTS household_member_enriched (
     is_deleted                              BOOLEAN,
     row_version                             INTEGER,
 
-    -- HouseholdMember.additionalFields
     member_additional_fields                JSONB,
 
-    -- HouseholdMember.auditDetails
     created_by                              VARCHAR(64),
     last_modified_by                        VARCHAR(64),
     created_time                            BIGINT,
     last_modified_time                      BIGINT,
 
-    -- HouseholdMember.clientAuditDetails
     client_created_by                       VARCHAR(64),
     client_last_modified_by                 VARCHAR(64),
     client_created_time                     BIGINT,
     client_last_modified_time               BIGINT,
 
-    -- HouseholdMemberIndexV1 top-level fields
-
-    -- Flattened Boundary Hierarchy Fields
-    country_code                    VARCHAR(128),
-    health_center_code              VARCHAR(128),
-    spp_code                        VARCHAR(128),
-    province_code                   VARCHAR(128),
-    district_code                   VARCHAR(128),
-    village_code                    VARCHAR(128),
+    country_code                            VARCHAR(128),
+    health_center_code                      VARCHAR(128),
+    spp_code                                VARCHAR(128),
+    province_code                           VARCHAR(128),
+    district_code                           VARCHAR(128),
+    village_code                            VARCHAR(128),
 
     date_of_birth                           BIGINT,
     age                                     INTEGER,
@@ -116,25 +109,24 @@ CREATE TABLE IF NOT EXISTS household_member_enriched (
     name_of_user                            VARCHAR(250),
     role                                    VARCHAR(128),
     user_address                            VARCHAR(440),
-    task_dates                              DATE,
-    synced_date                             DATE,
-    synced_time_stamp                       TIMESTAMPTZ,
+
+    -- FIXED: Changed from DATE/TIMESTAMPTZ to VARCHAR(128) to match POJO String type
+    task_dates                              VARCHAR(128),
+    synced_date                             VARCHAR(128),
+    synced_time_stamp                       VARCHAR(128),
+
     geo_point_lat                           DOUBLE PRECISION,
     geo_point_lon                           DOUBLE PRECISION,
     locality_code                           VARCHAR(128),
-    additional_details                      JSONB
+    additional_details                      JSONB,
 
-    -- ==========================================
-    -- EXTRA FIELDS USED BY TRANSFORMER
-    -- ==========================================
-    project_id                      VARCHAR(64),
-    project_type                    VARCHAR(64),
-    project_type_id                 VARCHAR(64),
-    project_name                    VARCHAR(256),
-    campaign_number                 VARCHAR(128),
-    campaign_id                     VARCHAR(128)
-    );
-
+    project_id                              VARCHAR(64),
+    project_type                            VARCHAR(64),
+    project_type_id                         VARCHAR(64),
+    project_name                            VARCHAR(256),
+    campaign_number                         VARCHAR(128),
+    campaign_id                             VARCHAR(128)
+);
 CREATE TABLE IF NOT EXISTS project_beneficiary_enriched (
     -- ProjectBeneficiary core fields
     id                                      VARCHAR(64)     PRIMARY KEY,
@@ -163,35 +155,34 @@ CREATE TABLE IF NOT EXISTS project_beneficiary_enriched (
     client_created_time                     BIGINT,
     client_last_modified_time               BIGINT,
 
-    -- ProjectBeneficiaryIndexV1 top-level fields
-
     -- Flattened Boundary Hierarchy Fields
-    country_code                    VARCHAR(128),
-    health_center_code              VARCHAR(128),
-    spp_code                        VARCHAR(128),
-    province_code                   VARCHAR(128),
-    district_code                   VARCHAR(128),
-    village_code                    VARCHAR(128),
+    country_code                            VARCHAR(128),
+    health_center_code                      VARCHAR(128),
+    spp_code                                VARCHAR(128),
+    province_code                           VARCHAR(128),
+    district_code                           VARCHAR(128),
+    village_code                            VARCHAR(128),
 
     user_name                               VARCHAR(180),
     name_of_user                            VARCHAR(250),
     role                                    VARCHAR(128),
     user_address                            VARCHAR(440),
-    task_dates                              DATE,
-    synced_date                             DATE,
-    synced_time_stamp                       TIMESTAMPTZ,
+
+    -- FIXED: Widened types to match POJO String definitions
+    task_dates                              VARCHAR(256),
+    synced_date                             VARCHAR(128),
+    synced_time_stamp                       VARCHAR(128),
+
     additional_details                      JSONB,
 
-    -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
-    -- ==========================================
-    project_type                    VARCHAR(64),
-    project_type_id                 VARCHAR(64),
-    project_name                    VARCHAR(256),
-    campaign_number                 VARCHAR(128),
-    campaign_id                     VARCHAR(128)
+    project_type                            VARCHAR(64),
+    project_type_id                         VARCHAR(64),
+    project_name                            VARCHAR(256),
+    campaign_number                         VARCHAR(128),
+    campaign_id                             VARCHAR(128)
+);
 
-    );
 
 CREATE TABLE IF NOT EXISTS attendance_log_enriched (
     -- ==========================================
@@ -202,7 +193,7 @@ CREATE TABLE IF NOT EXISTS attendance_log_enriched (
     register_id                             VARCHAR(256),
     individual_id                           VARCHAR(256),
     log_user_name                           VARCHAR(180),
-    time                                    BIGINT,
+    time                                    NUMERIC,        -- FIXED ISSUE 3: Changed from BIGINT to NUMERIC to match POJO's BigDecimal
     type                                    VARCHAR(64),
     status                                  VARCHAR(64),
     document_ids                            JSONB,          -- Mapped from List<Document>
@@ -244,46 +235,60 @@ CREATE TABLE IF NOT EXISTS attendance_log_enriched (
     project_name                            VARCHAR(256),
     campaign_number                         VARCHAR(128),
     campaign_id                             VARCHAR(128)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS attendance_register_enriched (
-    -- AttendanceRegister core fields
-    id                                      VARCHAR(256)    PRIMARY KEY,
-    tenant_id                               VARCHAR(64),
-    register_number                         VARCHAR(256),
-    name                                    VARCHAR(250),
-    reference_id                            VARCHAR(64),
-    service_code                            VARCHAR(128),
-    start_date                              BIGINT,
-    end_date                                BIGINT,
-    status                                  VARCHAR(64),
-    staff                                   JSONB, --TODO: should this be kept in a separate table?
-    attendees                               JSONB, --TODO: should this be kept in a separate table?
-
--- AttendanceRegister.additionalDetails
-    register_additional_details             JSONB,
-
-    -- AttendanceRegister.auditDetails
-    created_by                              VARCHAR(64),
-    last_modified_by                        VARCHAR(64),
-    created_time                            BIGINT,
-    last_modified_time                      BIGINT,
-
-    -- AttendanceRegisterIndexV1 top-level fields
-    attendees_info                          JSONB,
-    transformer_time_stamp                  TIMESTAMPTZ,
     -- ==========================================
-    -- EXTRA FIELDS USED BY TRANSFORMER
+    -- CORE FIELDS
     -- ==========================================
-    project_id                      VARCHAR(64),
-    project_type                    VARCHAR(64),
-    project_type_id                 VARCHAR(64),
-    project_name                    VARCHAR(256),
-    campaign_number                 VARCHAR(128),
-    campaign_id                     VARCHAR(128)
+    id                              VARCHAR(256)    PRIMARY KEY,
+    tenant_id                       VARCHAR(64)     NOT NULL,
+    register_number                 VARCHAR(256),
+    name                            VARCHAR(250),
+    reference_id                    VARCHAR(64),
+    service_code                    VARCHAR(128),
+    start_date                      BIGINT,
+    end_date                        BIGINT,
+    status                          VARCHAR(64),
 
+    -- ==========================================
+    -- COMPLEX OBJECTS (Mapped to JSONB)
+    -- ==========================================
+    staff                           JSONB,
+    attendees                       JSONB,
+    register_additional_details     JSONB,
 
-    );
+    -- ==========================================
+    -- AUDIT DETAILS
+    -- ==========================================
+    created_by                      VARCHAR(64),
+    last_modified_by                VARCHAR(64),
+    created_time                    BIGINT,
+    last_modified_time              BIGINT,
+
+    -- ==========================================
+    -- AGGREGATION AND INFO MAPPINGS
+    -- ==========================================
+    attendees_info                  JSONB,
+    staffs_info                     JSONB,
+    staffs_count                    BIGINT,
+    attendees_count                 BIGINT,
+
+    -- FIXED Issue #2: Set to VARCHAR(128) to match POJO String type
+    transformer_time_stamp          VARCHAR(128),
+
+    -- ==========================================
+    -- FLATTENED BOUNDARY HIERARCHY FIELDS
+    -- ==========================================
+    country_code                    VARCHAR(128),
+    health_center_code              VARCHAR(128),
+    spp_code                        VARCHAR(128),
+    province_code                   VARCHAR(128),
+    district_code                   VARCHAR(128),
+    village_code                    VARCHAR(128)
+
+    -- FIXED Issue #1: Project fields removed to match the fixed POJO structure
+);
 
 CREATE TABLE IF NOT EXISTS pgr_complaints_enriched (
     -- Service core fields
@@ -333,28 +338,27 @@ CREATE TABLE IF NOT EXISTS pgr_complaints_enriched (
     user_address                            VARCHAR(440),
 
     -- Flattened Boundary Hierarchy Fields
-    country_code                    VARCHAR(128),
-    health_center_code              VARCHAR(128),
-    spp_code                        VARCHAR(128),
-    province_code                   VARCHAR(128),
-    district_code                   VARCHAR(128),
-    village_code                    VARCHAR(128),
+    country_code                            VARCHAR(128),
+    health_center_code                      VARCHAR(128),
+    spp_code                                VARCHAR(128),
+    province_code                           VARCHAR(128),
+    district_code                           VARCHAR(128),
+    village_code                            VARCHAR(128),
 
-
-    task_dates                              DATE,
+    task_dates                              VARCHAR(256),   -- FIXED: Changed from DATE to VARCHAR(256)
     locality_code                           VARCHAR(128),
-    additional_details                      JSONB
+    additional_details                      JSONB,
 
     -- ==========================================
     -- EXTRA FIELDS USED BY TRANSFORMER
     -- ==========================================
-    project_id                      VARCHAR(64),
-    project_type                    VARCHAR(64),
-    project_type_id                 VARCHAR(64),
-    project_name                    VARCHAR(256),
-    campaign_number                 VARCHAR(128),
-    campaign_id                     VARCHAR(128)
-    );
+    project_id                              VARCHAR(64),
+    project_type                            VARCHAR(64),
+    project_type_id                         VARCHAR(64),
+    project_name                            VARCHAR(256),
+    campaign_number                         VARCHAR(128),
+    campaign_id                             VARCHAR(128)
+);
 
 
 CREATE TABLE IF NOT EXISTS project_staff_enriched (
@@ -402,7 +406,7 @@ CREATE TABLE IF NOT EXISTS project_staff_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-    );
+);
 
 
 
@@ -411,7 +415,7 @@ CREATE TABLE IF NOT EXISTS referral_enriched (
     -- UPSTREAM FIELDS (From Referral.java)
     -- (Nested under "referral" in JSON, requires SMT Flattening)
     -- ==========================================
-    id                                          VARCHAR(64)     PRIMARY KEY,
+                                                 id                                          VARCHAR(64)     PRIMARY KEY,
     client_reference_id                         VARCHAR(64),
     project_beneficiary_id                      VARCHAR(64),
     project_beneficiary_client_reference_id     VARCHAR(64),
@@ -478,7 +482,7 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
     -- Fields from DeviceToken.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                     id                              VARCHAR(64)     PRIMARY KEY,
     user_id                         VARCHAR(64)     NOT NULL,
     device_token                    VARCHAR(512)    NOT NULL, -- Expanded length, Firebase/FCM tokens are long
     device_type                     VARCHAR(64)     NOT NULL,
@@ -527,7 +531,7 @@ CREATE TABLE IF NOT EXISTS device_token_enriched (
     -- ==========================================
     -- Fields from DeviceToken.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                     id                              VARCHAR(64)     PRIMARY KEY,
     user_id                         VARCHAR(64)     NOT NULL,
     device_token                    VARCHAR(512)    NOT NULL, -- Expanded length, Firebase/FCM tokens are long
     device_type                     VARCHAR(64)     NOT NULL,
@@ -576,7 +580,7 @@ CREATE TABLE IF NOT EXISTS hf_referral_enriched (
     -- ==========================================
     -- UPSTREAM FIELDS (From HFReferral.java)
     -- ==========================================
-    id                                  VARCHAR(64)     PRIMARY KEY,
+                                                    id                                  VARCHAR(64)     PRIMARY KEY,
     client_reference_id                 VARCHAR(64),
     tenant_id                           VARCHAR(1000)   NOT NULL,
     project_id                          VARCHAR(64),
@@ -636,7 +640,7 @@ CREATE TABLE IF NOT EXISTS bill_enriched (
     -- ==========================================
     -- Fields from Bill.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                             id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(64)     NOT NULL,
     locality_code                   VARCHAR(256),
     bill_date                       BIGINT          NOT NULL,
@@ -703,7 +707,7 @@ CREATE TABLE IF NOT EXISTS attendee_enriched (
     -- ==========================================
     -- UPSTREAM FIELDS (From IndividualEntry.java)
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                 id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(1000)   NOT NULL,
     register_id                     VARCHAR(256),
     individual_id                   VARCHAR(256),
@@ -752,7 +756,7 @@ CREATE TABLE IF NOT EXISTS side_effect_enriched (
     -- ==========================================
     -- UPSTREAM FIELDS (From SideEffect.java)
     -- ==========================================
-    id                                          VARCHAR(64)     PRIMARY KEY,
+                                                    id                                          VARCHAR(64)     PRIMARY KEY,
     client_reference_id                         VARCHAR(64),
     task_id                                     VARCHAR(64),
     task_client_reference_id                    VARCHAR(64)     NOT NULL,
@@ -816,7 +820,7 @@ CREATE TABLE IF NOT EXISTS muster_roll_enriched (
     -- ==========================================
     -- UPSTREAM FIELDS (From MusterRoll.java)
     -- ==========================================
-    id                              VARCHAR(128)    PRIMARY KEY,
+                                                    id                              VARCHAR(128)    PRIMARY KEY,
     tenant_id                       VARCHAR(64)     NOT NULL,
     muster_roll_number              VARCHAR(128),
     register_id                     VARCHAR(256)    NOT NULL,
@@ -871,7 +875,7 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     -- ==========================================
     -- DOWNSTREAM FIELDS (From StockIndexV1.java)
     -- ==========================================
-    id                                VARCHAR(64),
+                                              id                                VARCHAR(64) PRIMARY KEY,
     facility_id                       VARCHAR(64),
     transacting_facility_id           VARCHAR(64),
     facility_name                     VARCHAR(256),
@@ -887,7 +891,6 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     user_address                      VARCHAR(440),
     date_of_entry                     BIGINT,
 
-
     -- Flattened Boundary Hierarchy Fields
     country_code                    VARCHAR(128),
     health_center_code              VARCHAR(128),
@@ -895,7 +898,6 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     province_code                   VARCHAR(128),
     district_code                   VARCHAR(128),
     village_code                    VARCHAR(128),
-
 
     created_by                        VARCHAR(256),
     last_modified_by                  VARCHAR(256),
@@ -914,7 +916,7 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     task_dates                        VARCHAR(128),
     synced_date                       VARCHAR(128),
     additional_details                JSONB,
-    waybill_number                    VARCHAR(128)
+    waybill_number                    VARCHAR(128),
 
     -- ==========================================
     -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
@@ -926,12 +928,11 @@ CREATE TABLE IF NOT EXISTS stock_enriched (
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
     );
-
 CREATE TABLE IF NOT EXISTS attendance_staff_enriched (
     -- ==========================================
     -- Fields from StaffPermission.java
     -- ==========================================
-    id                              VARCHAR(64)     PRIMARY KEY,
+                                                         id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(1000)   NOT NULL,
     register_id                     VARCHAR(256),
     user_id                         VARCHAR(64),
@@ -978,7 +979,7 @@ CREATE TABLE IF NOT EXISTS attendance_staff_enriched (
     );
 
 CREATE TABLE IF NOT EXISTS service_task_enriched (
-    id VARCHAR(255) PRIMARY KEY,
+                                                     id VARCHAR(255) PRIMARY KEY,
 
     created_time BIGINT,
     created_by VARCHAR(255),
@@ -1036,7 +1037,7 @@ CREATE TABLE IF NOT EXISTS bill_detail_enriched (
     -- ==========================================
     -- Fields from BillDetail.java
     -- ==========================================
-    id                              VARCHAR(128)    PRIMARY KEY,
+                                                    id                              VARCHAR(128)    PRIMARY KEY,
     tenant_id                       VARCHAR(64)     NOT NULL,
     bill_id                         VARCHAR(64),
     total_amount                    NUMERIC(12, 2)  DEFAULT 0,
@@ -1190,21 +1191,14 @@ CREATE TABLE IF NOT EXISTS referral_service_task_enriched (
     age_group                       VARCHAR(64)     NOT NULL,
 
     -- ==========================================
-    -- CORE UPSTREAM IDENTIFIERS & METADATA
+    -- CORE IDENTIFIERS & AUDIT
     -- ==========================================
     tenant_id                       VARCHAR(1000)   NOT NULL,
-    service_def_id                  VARCHAR(64),
-    reference_id                    VARCHAR(128),
-    account_id                      VARCHAR(64),
-    client_id                       VARCHAR(64),
-
     created_by                      VARCHAR(64),
-    last_modified_by                VARCHAR(64),
     created_time                    BIGINT,
-    last_modified_time              BIGINT,
 
     -- ==========================================
-    -- ENRICHED DOWNSTREAM METRICS
+    -- DOWNSTREAM METRICS
     -- ==========================================
     supervisor_level                VARCHAR(128),
     checklist_name                  VARCHAR(256),
@@ -1227,9 +1221,10 @@ CREATE TABLE IF NOT EXISTS referral_service_task_enriched (
     malaria_positive_ape            VARCHAR(256),
     malaria_negative_ape            VARCHAR(256),
 
-
-
-    -- Flattened Boundary Hierarchy Fields
+    -- ==========================================
+    -- GEOGRAPHY / BOUNDARIES
+    -- ==========================================
+    -- Flattened Boundary Hierarchy Fields (From boundaryHierarchyCode Map)
     country_code                    VARCHAR(128),
     health_center_code              VARCHAR(128),
     spp_code                        VARCHAR(128),
@@ -1237,17 +1232,13 @@ CREATE TABLE IF NOT EXISTS referral_service_task_enriched (
     district_code                   VARCHAR(128),
     village_code                    VARCHAR(128),
 
-
     -- ==========================================
-    -- COMPLEX JSONB MAPPINGS (Arrays & Objects)
+    -- DYNAMIC EXTENSIONS
     -- ==========================================
-    raw_attributes                  JSONB,          -- Upstream List<AttributeValue>
-    additional_fields               JSONB,          -- Upstream JsonNode
-    additional_details_upstream     JSONB,          -- Upstream JsonNode
-    additional_details              JSONB,          -- Downstream ObjectNode (Contains cycle_index)
+    additional_details              JSONB,          -- Maps to ObjectNode additionalDetails
 
 -- ==========================================
--- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+-- EXTRA FIELDS (Inherited via ProjectInfo)
 -- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
@@ -1257,8 +1248,7 @@ CREATE TABLE IF NOT EXISTS referral_service_task_enriched (
     campaign_id                     VARCHAR(128),
 
     PRIMARY KEY (id, age_group)
-    );
-
+);
 --
 CREATE TABLE IF NOT EXISTS project_enriched (
     -- ==========================================
@@ -1316,7 +1306,7 @@ CREATE TABLE IF NOT EXISTS project_enriched (
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-    );
+);
 
 
 CREATE TABLE IF NOT EXISTS bill_report_enriched (
@@ -1327,7 +1317,7 @@ CREATE TABLE IF NOT EXISTS bill_report_enriched (
     bill_id                         VARCHAR(64),
     bill_ids                        JSONB,          -- List<String> mapped to JSONB
     tenant_id                       VARCHAR(1000)   NOT NULL,
-    type                            VARCHAR(64),    -- ReportType enum
+    type                            VARCHAR(64)     NOT NULL, -- FIXED: Added NOT NULL constraint
     status                          VARCHAR(64),    -- ReportStatus enum
     file_store_id                   VARCHAR(64),
     error_details                   JSONB,          -- Object mapped to JSONB
@@ -1357,75 +1347,77 @@ CREATE TABLE IF NOT EXISTS bill_report_enriched (
     village_code                    VARCHAR(128),
 
     -- ==========================================
--- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
--- ==========================================
+    -- EXTRA FIELDS USED BY THE TRANSFORMER DURING TRANSFORMATION
+    -- ==========================================
     project_id                      VARCHAR(64),
     project_type                    VARCHAR(64),
     project_type_id                 VARCHAR(64),
     project_name                    VARCHAR(256),
     campaign_number                 VARCHAR(128),
     campaign_id                     VARCHAR(128)
-    );
-
-
-
-
+);
 
 CREATE TABLE IF NOT EXISTS user_action_enriched (
     -- ==========================================
-    -- UPSTREAM FIELDS (From UserAction.java & EgovOfflineModel)
-    -- (Nested under "userAction" in JSON, requires SMT Flattening)
+    -- PRIMARY KEY & CORE IDENTIFIERS
     -- ==========================================
     id                              VARCHAR(64)     PRIMARY KEY,
     tenant_id                       VARCHAR(1000)   NOT NULL,
     client_reference_id             VARCHAR(64),
+    project_id                      VARCHAR(64),    -- Consolidated single Project ID
 
-    -- Using prefix to avoid collision with downstream explicit project_id
-    raw_project_id                  VARCHAR(64),
-
+-- ==========================================
+-- UPSTREAM METRICS (From UserAction)
+-- ==========================================
     latitude                        DOUBLE PRECISION,
     longitude                       DOUBLE PRECISION,
     location_accuracy               DOUBLE PRECISION,
     boundary_code                   VARCHAR(256),
-    action                          VARCHAR(64),    -- Enum UserActionEnum mapped to String
+    action                          VARCHAR(64),
     beneficiary_tag                 VARCHAR(64),
     resource_tag                    VARCHAR(64),
-    is_deleted                      BOOLEAN         DEFAULT FALSE,
     additional_fields               JSONB,
 
-    -- Upstream Audit Details (Server)
+    -- ==========================================
+    -- UPSTREAM AUDIT DETAILS
+    -- ==========================================
     created_by                      VARCHAR(64),
     last_modified_by                VARCHAR(64),
     created_time                    BIGINT,
     last_modified_time              BIGINT,
-
-    -- Upstream Audit Details (Client)
     client_created_by               VARCHAR(64),
     client_last_modified_by         VARCHAR(64),
     client_created_time             BIGINT,
     client_last_modified_time       BIGINT,
 
     -- ==========================================
-    -- DOWNSTREAM FIELDS (From UserActionIndexV1.java)
+    -- DOWNSTREAM USER & PROJECT METADATA
     -- ==========================================
-    project_id                      VARCHAR(64),    -- Explicitly declared in V1 Index
-    project_type                    VARCHAR(64),    -- Explicitly declared in V1 Index
-    project_type_id                 VARCHAR(64),    -- Explicitly declared in V1 Index
+    project_type                    VARCHAR(64),
+    project_type_id                 VARCHAR(64),
+    project_name                    VARCHAR(256),
+    campaign_number                 VARCHAR(128),
+    campaign_id                     VARCHAR(128),
 
     user_name                       VARCHAR(180),
     name_of_user                    VARCHAR(250),
     role                            VARCHAR(128),
 
-    -- Sync & Telemetry
+    -- ==========================================
+    -- SYNC & TELEMETRY
+    -- ==========================================
     synced_time_stamp               VARCHAR(128),
     synced_time                     BIGINT,
     task_dates                      VARCHAR(128),
     synced_date                     VARCHAR(128),
-    --GeoPoint in expanded form
+
+    -- GeoPoint Array Flattened
     geo_latitude                    DOUBLE PRECISION,
     geo_longitude                   DOUBLE PRECISION,
 
-    -- Flattened Boundary Hierarchy Fields
+    -- ==========================================
+    -- FLATTENED BOUNDARY HIERARCHY
+    -- ==========================================
     country_code                    VARCHAR(128),
     health_center_code              VARCHAR(128),
     spp_code                        VARCHAR(128),
@@ -1433,19 +1425,11 @@ CREATE TABLE IF NOT EXISTS user_action_enriched (
     district_code                   VARCHAR(128),
     village_code                    VARCHAR(128),
 
-    -- Complex JSONB Arrays & Objects
-    additional_details              JSONB,          -- Mapped from ObjectNode (parsed fields)
-
--- ==========================================
---Extra fields used by the transformer for transformation
--- ==========================================
-    project_name                    VARCHAR(256),
-    campaign_number                 VARCHAR(128),
-    campaign_id                     VARCHAR(128)
-
-    );
-
-
+    -- ==========================================
+    -- DYNAMIC EXTENSIONS
+    -- ==========================================
+    additional_details              JSONB
+);
 
 CREATE TABLE IF NOT EXISTS project_task_enriched (
     -- ==========================================
@@ -1508,19 +1492,20 @@ CREATE TABLE IF NOT EXISTS project_task_enriched (
     longitude                               DOUBLE PRECISION,
     location_accuracy                       DOUBLE PRECISION,
     locality_code                           VARCHAR(256),
-    geo_point                               JSONB,          -- List<Double> Array [lon, lat]
+    geo_point_lat                           DOUBLE PRECISION,
+    geo_point_lon                           DOUBLE PRECISION,
 
--- Flattened Boundary Hierarchy Fields
-    country_code                    VARCHAR(128),
-    health_center_code              VARCHAR(128),
-    spp_code                        VARCHAR(128),
-    province_code                   VARCHAR(128),
-    district_code                   VARCHAR(128),
-    village_code                    VARCHAR(128),
+    -- Flattened Boundary Hierarchy Fields
+    country_code                            VARCHAR(128),
+    health_center_code                      VARCHAR(128),
+    spp_code                                VARCHAR(128),
+    province_code                           VARCHAR(128),
+    district_code                           VARCHAR(128),
+    village_code                            VARCHAR(128),
 
     -- ==========================================
--- SYNC TELEMETRY
--- ==========================================
+    -- SYNC TELEMETRY
+    -- ==========================================
     synced_time_stamp                       VARCHAR(128),
     synced_date                             VARCHAR(128),
     synced_time                             BIGINT,
@@ -1529,16 +1514,15 @@ CREATE TABLE IF NOT EXISTS project_task_enriched (
     -- ==========================================
     -- DYNAMIC EXTENSIONS
     -- ==========================================
-    additional_details                      JSONB,          -- ObjectNode
+    additional_details                      JSONB,
 
--- ==========================================
--- EXTRA FIELDS (Inherited via ProjectInfo)
--- ==========================================
+    -- ==========================================
+    -- EXTRA FIELDS (Inherited via ProjectInfo)
+    -- ==========================================
     project_id                              VARCHAR(64),
     project_type                            VARCHAR(64),
     project_type_id                         VARCHAR(64),
     project_name                            VARCHAR(256),
     campaign_number                         VARCHAR(128),
     campaign_id                             VARCHAR(128)
-
-    );
+);
